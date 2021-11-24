@@ -1,49 +1,73 @@
+#include <iostream>
+
 #include "f_controller/ur5.hpp"
 
-UR5::UR5(ros::NodeHandle& n) {
+UR5::UR5(ros::NodeHandle &n) {
   for (int i = 0; i < UR5_JOINT_COUNT; i++) {
     m_publishers[i] = n.advertise<std_msgs::Float64>(PubTopics[i], 1000);
-    m_subscribers[UR5_SHOULDER_PAN] =
-        n.subscribe<JointState>(UR5_SHOULDER_PAN_TOPIC STATE, 1000,
-                                [&](const JointState::ConstPtr& ctr_msg) {
-                                  m_state[i] = ctr_msg->process_value;
-                                });
+    m_subscribers[i] = n.subscribe<JointState>(
+        SubTopics[i], 1000, [this, i](const JointState::ConstPtr &msg) { m_state[i] = msg->process_value; });
   }
 }
 
 UR5::~UR5() {
   for (int i = 0; i < UR5_JOINT_COUNT; i++) {
-    m_subscribers[i].shutdown();
     m_publishers[i].shutdown();
+    m_subscribers[i].shutdown();
   }
 }
 
 void UR5::tick() {
-  if (m_jobs.empty());
+  if (m_jobs.empty())
+    return;
   if (reached()) {
+    std::cout << "job finished" << std::endl;
     m_jobs.pop();
+  } else {
+    std::cout << "executing job in queue" << std::endl;
   }
 }
 
 void UR5::publish() {
-  if (m_jobs.empty()) return;
-  auto targets = m_jobs.front();
+  if (m_jobs.empty())
+    return;
+  JointParams &target = m_jobs.front();
   for (int i = 0; i < UR5_JOINT_COUNT; i++) {
     std_msgs::Float64 msg;
-    msg.data = targets[i];
+    msg.data = target[i];
     m_publishers[i].publish(msg);
   }
 }
 
+void UR5::push(JointParams params) {
+  m_jobs.push(params);
+}
+
+const UR5::JointParams &UR5::current() const {
+  return m_jobs.front();
+}
+
+UR5::JointParams UR5::pop() {
+  JointParams &front = m_jobs.front();
+  m_jobs.pop();
+  return front;
+}
+
 bool UR5::reached() {
-  if (m_jobs.empty()) return true;
-  auto targets = m_jobs.front();
+  if (m_jobs.empty())
+    return true;
+  std::cout << "checking if reached" << std::endl;
+  JointParams &target = m_jobs.front();
   for (int i = 0; i < UR5_JOINT_COUNT; i++) {
-    if (!closeEnough((Joint) i, targets[i], m_state[i])) return false;
+    if (target.is_ignored((Joint)i))
+      continue;
+    std::cout << i << "\t" << target[i] << "\t" << m_state[i] << std::endl;
+    if (!close_enough((Joint)i, target[i], m_state[i]))
+      return false;
   }
   return true;
 }
 
-bool UR5::closeEnough(Joint joint, float target, float state) {
-  return target == state; // TODO: error
+bool UR5::close_enough(Joint joint, float target, float state) {
+  return abs(target - state) <= 0.1; // TODO: error
 }

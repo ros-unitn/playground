@@ -68,6 +68,17 @@
     "utility": "cpp",
     "vector": "cpp",
     "iostream": "cpp",
-    "queue": "cpp"
-  }
+    "queue": "cpp",
+    "__functional_03": "cpp",
+    "deque": "cpp",
+    "memory_resource": "cpp"
+  },
+  "python.autoComplete.extraPaths": [
+    "/usr/local/Caskroom/miniforge/base/envs/robostackenv/lib/python3.8/site-packages",
+    "/Users/rossi/dev/fr/robotics/catkin_ws/devel/lib/python3.8/site-packages"
+  ],
+  "python.analysis.extraPaths": [
+    "/usr/local/Caskroom/miniforge/base/envs/robostackenv/lib/python3.8/site-packages",
+    "/Users/rossi/dev/fr/robotics/catkin_ws/devel/lib/python3.8/site-packages"
+  ]
 }

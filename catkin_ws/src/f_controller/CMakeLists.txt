@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(f_controller)
 
+set(CMAKE_BUILD_TYPE Debug)
+
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
 
@@ -105,7 +107,7 @@ catkin_package(
   INCLUDE_DIRS include
   LIBRARIES f_controller
   CATKIN_DEPENDS roscpp std_msgs
-  DEPENDS system_lib
+  # DEPENDS system_lib
 )
 
 ###########
