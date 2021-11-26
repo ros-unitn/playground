@@ -1,6 +1,6 @@
-[submodule "catkin_ws/src/universal_robot"]
-	path = catkin_ws/src/universal_robot
+[submodule "src/universal_robot"]
+	path = src/universal_robot
 	url = https://github.com/ros-industrial/universal_robot
-[submodule "catkin_ws/src/ur5-joint-position-control"]
-	path = catkin_ws/src/ur5-joint-position-control
+[submodule "src/ur5-joint-position-control"]
+	path = src/ur5-joint-position-control
 	url = https://github.com/dairal/ur5-joint-position-control
