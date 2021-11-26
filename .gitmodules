@@ -1,0 +1,9 @@
+[submodule "src/ur5-joint-position-control"]
+	path = src/ur5-joint-position-control
+	url = https://github.com/dairal/ur5-joint-position-control
+[submodule "src/universal_robot"]
+	path = src/universal_robot
+	url = https://github.com/ros-industrial/universal_robot.git
+[submodule "src/robotiq"]
+	path = src/robotiq
+	url = https://github.com/filesmuggler/robotiq.git
