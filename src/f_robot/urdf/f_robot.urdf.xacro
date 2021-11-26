@@ -9,13 +9,13 @@
   <link name="robotiq_coupler">
     <visual>
       <geometry>
-        <mesh filename="package://robotiq_description/meshes/visual/robotiq_gripper_coupler.stl" />
+        <mesh filename="package://robotiq_description/meshes/robotiq_85_coupler.stl" />
       </geometry>
       <material name="flat_black" />
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://robotiq_description/meshes/visual/robotiq_gripper_coupler.stl" />
+        <mesh filename="package://robotiq_description/meshes/robotiq_85_coupler.stl" />
       </geometry>
     </collision>
     <inertial>
