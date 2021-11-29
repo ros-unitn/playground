@@ -62,5 +62,6 @@
         </plugin>
       </sensor>
     </link>
+    <static>true</static>
   </model>
 </sdf>
