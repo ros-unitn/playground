@@ -1,9 +1,9 @@
-# Publish all joint states -----------------------------------
+# Publish all joint states
 joint_state_controller:
   type: joint_state_controller/JointStateController
   publish_rate: 50  
 
-# Position Controllers ---------------------------------------
+# Position Controllers
 shoulder_pan_joint_position_controller:
   type: effort_controllers/JointPositionController
   joint: shoulder_pan_joint
