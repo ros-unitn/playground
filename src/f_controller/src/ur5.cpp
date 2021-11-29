@@ -2,6 +2,23 @@
 
 #include "f_controller/ur5.hpp"
 
+static constexpr const char *PubTopics[] = {
+    UR5_SHOULDER_PAN_TOPIC TARGET,
+    UR5_SHOULDER_LIFT_TOPIC TARGET,
+    UR5_ELBOW_TOPIC TARGET,
+    UR5_WRIST_1_TOPIC TARGET,
+    UR5_WRIST_2_TOPIC TARGET,
+    UR5_WRIST_3_TOPIC TARGET,
+};
+static constexpr const char *SubTopics[] = {
+    UR5_SHOULDER_PAN_TOPIC STATE,
+    UR5_SHOULDER_LIFT_TOPIC STATE,
+    UR5_ELBOW_TOPIC STATE,
+    UR5_WRIST_1_TOPIC STATE,
+    UR5_WRIST_2_TOPIC STATE,
+    UR5_WRIST_3_TOPIC STATE,
+};
+
 UR5::UR5(ros::NodeHandle &n) {
   for (int i = 0; i < UR5_JOINT_COUNT; i++) {
     m_publishers[i] = n.advertise<std_msgs::Float64>(PubTopics[i], 1000);

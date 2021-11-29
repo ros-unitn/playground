@@ -17,23 +17,6 @@
 #define STATE "/state"
 
 class UR5 {
-  static constexpr const char *PubTopics[] = {
-      UR5_SHOULDER_PAN_TOPIC TARGET,
-      UR5_SHOULDER_LIFT_TOPIC TARGET,
-      UR5_ELBOW_TOPIC TARGET,
-      UR5_WRIST_1_TOPIC TARGET,
-      UR5_WRIST_2_TOPIC TARGET,
-      UR5_WRIST_3_TOPIC TARGET,
-  };
-  static constexpr const char *SubTopics[] = {
-      UR5_SHOULDER_PAN_TOPIC STATE,
-      UR5_SHOULDER_LIFT_TOPIC STATE,
-      UR5_ELBOW_TOPIC STATE,
-      UR5_WRIST_1_TOPIC STATE,
-      UR5_WRIST_2_TOPIC STATE,
-      UR5_WRIST_3_TOPIC STATE,
-  };
-
 public:
   enum Joint {
     UR5_SHOULDER_PAN,

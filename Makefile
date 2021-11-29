@@ -23,13 +23,21 @@ devel:
 %.$(lib_ext): devel
 	cp $(current_dir)/devel/lib/$(@F) $@
 
+%.model:
+	cp -R $(current_dir)/models/$(@F) $@
+
 setup: devel 
 	source $(current_dir)/devel/setup.bash
 
-run: setup $(home)/.ros/libgazebo_mimic_joint_plugin.$(lib_ext)
+libraries: $(home)/.ros/libgazebo_mimic_joint_plugin.$(lib_ext)
+
+models: $(home)/.gazebo/models/kinect.model $(home)/.gazebo/models/ur5_base.model
+
+run: setup libraries models
 	roslaunch f_robot project.launch
 
 clean:
-	rm $(home)/.ros/*.$(lib_ext)
+	rm -rf $(home)/.ros/*.$(lib_ext)
+	rm -rf $(home)/.gazebo/models/*.model
 
-.PHONY: install clean
+.PHONY: setup run clean libraries models

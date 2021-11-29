@@ -38,11 +38,17 @@
     <!-- A gazebo links attacher -->
     <!-- <plugin name="ros_link_attacher_plugin" -->
     <!--         filename="libgazebo_ros_link_attacher.so"/> -->
+    <model name="kinect">
+      <include>
+        <uri>model://kinect.model</uri>
+        <pose>0 0 2 0 0 0</pose>
+      </include>
+    </model>
 
     <!-- The robot base -->
     <model name="ur5_base">
       <include>
-        <uri>model://ur5_base</uri>
+        <uri>model://ur5_base.model</uri>
         <pose>0 0 0 0 0 0</pose>
       </include>
     </model>
