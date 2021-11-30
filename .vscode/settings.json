@@ -71,7 +71,8 @@
     "queue": "cpp",
     "__functional_03": "cpp",
     "deque": "cpp",
-    "memory_resource": "cpp"
+    "memory_resource": "cpp",
+    "random": "cpp"
   },
   "python.autoComplete.extraPaths": [
     "/usr/local/Caskroom/miniforge/base/envs/robostackenv/lib/python3.8/site-packages",

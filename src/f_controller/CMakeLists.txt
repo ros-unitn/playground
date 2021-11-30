@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
+find_package(Eigen3 REQUIRED)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -119,6 +120,7 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${Eigen_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -138,6 +140,7 @@ add_executable(
   ${PROJECT_NAME}_node
   src/f_controller_node.cpp
   src/ur5.cpp
+  src/m_kinematics.cpp
 )
 
 ## Rename C++ executable without prefix
