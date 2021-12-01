@@ -17,7 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
 
 <robot name="f_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <xacro:include filename="$(find f_robot)/urdf/ur5_custom.urdf.xacro" />
-  <xacro:include filename="$(find robotiq_description)/urdf/robotiq_85_gripper.urdf.xacro" />
+  <xacro:include filename="$(find robotiq_description)/urdf/robotiq_2f_gripper.urdf.xacro" />
 
   <!-- Robotiq Coupler -->
   <!--  + Height added by the coupler: 8mm -->
@@ -25,13 +25,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
   <link name="robotiq_coupler">
     <visual>
       <geometry>
-        <mesh filename="package://robotiq_description/meshes/robotiq_85_coupler.stl" />
+        <mesh filename="package://robotiq_description/meshes/robotiq_2f_coupler.stl" />
       </geometry>
       <material name="flat_black" />
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://robotiq_description/meshes/robotiq_85_coupler.stl" />
+        <mesh filename="package://robotiq_description/meshes/robotiq_2f_coupler.stl" />
       </geometry>
     </collision>
     <inertial>
@@ -52,18 +52,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
     <material>Gazebo/FlatBlack</material>
   </gazebo>
 
-  <!-- Equivalent to the OpenRAVE manipulator denso_robotiq_85_gripper -->
-  <!-- <link name="denso_robotiq_85_gripper" /> -->
+  <!-- Equivalent to the OpenRAVE manipulator denso_robotiq_2f_gripper -->
+  <!-- <link name="denso_robotiq_2f_gripper" /> -->
   <!-- <joint name="manipulator_dummy_joint" type="fixed"> -->
   <!--   <origin xyz="0 0 0.1441" rpy="0 0 0" /> -->
   <!--   <parent link="robotiq_coupler"/> -->
-  <!--   <child link="denso_robotiq_85_gripper"/> -->
+  <!--   <child link="denso_robotiq_2f_gripper"/> -->
   <!-- </joint> -->
 
   <!-- Attach the robotiq 85 gripper -->
-  <xacro:robotiq_85_gripper prefix="" parent="robotiq_coupler">
+  <xacro:robotiq_2f_gripper prefix="" parent="robotiq_coupler">
     <origin xyz="0 0 0.004" rpy="0 ${-pi/2} ${pi}" />
-  </xacro:robotiq_85_gripper>
+  </xacro:robotiq_2f_gripper>
 
   <!-- Gazebo FT sensor plugin -->
   <gazebo reference="wrist_3_joint">
@@ -94,9 +94,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
         <detach_steps>2</detach_steps> <!-- default: 40 -->
         <min_contact_count>3</min_contact_count>
       </grasp_check>
-      <gripper_link>robotiq_85_left_finger_tip_link</gripper_link>
-      <gripper_link>robotiq_85_right_finger_tip_link</gripper_link>
-      <palm_link>robotiq_85_base_link</palm_link>
+      <gripper_link>robotiq_2f_left_finger_tip_link</gripper_link>
+      <gripper_link>robotiq_2f_right_finger_tip_link</gripper_link>
+      <palm_link>robotiq_2f_base_link</palm_link>
     </gripper>
   </gazebo>
 </robot>
