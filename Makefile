@@ -46,7 +46,7 @@ setup: devel
 
 libraries: $(home)/.ros/libgazebo_mimic_joint_plugin.$(lib_ext)
 
-models: $(home)/.gazebo/models/kinect.model $(home)/.gazebo/models/ur5_base.model
+models: $(home)/.gazebo/models/kinect.model $(home)/.gazebo/models/ur5_base.model $(home)/.gazebo/models/cafe_table.model
 
 run: setup libraries models
 	roslaunch f_robot project.launch
