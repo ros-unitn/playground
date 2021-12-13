@@ -30,10 +30,10 @@ else
 	lib_ext := so
 endif
 
-all: run
+all: build
 
-devel:
-	catkin_make
+build:
+	catkin_make	
 
 %.$(lib_ext): devel
 	cp $(current_dir)/devel/lib/$(@F) $@
@@ -55,4 +55,4 @@ clean:
 	rm -rf $(home)/.ros/*.$(lib_ext)
 	rm -rf $(home)/.gazebo/models/*.model
 
-.PHONY: setup run clean libraries models
+.PHONY: setup run clean libraries models build
