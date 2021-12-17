@@ -24,7 +24,7 @@
 
 #include "f_controller/params.hpp"
 
-#define UR5_SHOULDER_PAN_TOPIC "/shoulder_lift_joint_position_controller"
+#define UR5_SHOULDER_PAN_TOPIC "/shoulder_pan_joint_position_controller"
 #define UR5_SHOULDER_LIFT_TOPIC "/shoulder_lift_joint_position_controller"
 #define UR5_ELBOW_TOPIC "/elbow_joint_position_controller"
 #define UR5_WRIST_1_TOPIC "/wrist_1_joint_position_controller"
