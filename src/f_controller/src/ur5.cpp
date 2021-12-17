@@ -55,10 +55,10 @@ void UR5::tick() {
   if (m_jobs.empty())
     return;
   if (reached()) {
-    std::cout << "job finished" << std::endl;
+    //std::cout << "job finished" << std::endl;
     m_jobs.pop();
   } else {
-    std::cout << "executing job in queue" << std::endl;
+    //std::cout << "executing job in queue" << std::endl;
   }
 }
 
@@ -87,21 +87,25 @@ UR5::JointParams UR5::pop() {
   return front;
 }
 
+size_t UR5::remaining() const {
+  return m_jobs.size();
+}
+
 bool UR5::reached() {
   if (m_jobs.empty())
     return true;
-  std::cout << "checking if reached" << std::endl;
+  //std::cout << "checking if reached" << std::endl;
   JointParams &target = m_jobs.front();
   for (int i = 0; i < UR5_JOINT_COUNT; i++) {
     if (target.is_ignored((Joint)i))
       continue;
-    std::cout << i << "\t" << target[i] << "\t" << m_state[i] << std::endl;
+    //std::cout << i << "\t" << target[i] << "\t" << m_state[i] << std::endl;
     if (!close_enough((Joint)i, target[i], m_state[i]))
       return false;
   }
   return true;
 }
 
-bool UR5::close_enough(Joint joint, float target, float state) {
+bool UR5::close_enough(Joint joint, double target, double state) {
   return abs(target - state) <= 0.1; // TODO: error
 }
