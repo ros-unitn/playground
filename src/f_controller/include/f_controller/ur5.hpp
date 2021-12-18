@@ -46,7 +46,7 @@ public:
   };
 
   typedef control_msgs::JointControllerState JointState;
-  typedef GenericJointParams<float, Joint, UR5_JOINT_COUNT> JointParams;
+  typedef GenericJointParams<double, Joint, UR5_JOINT_COUNT> JointParams;
 
   UR5(ros::NodeHandle &n);
   ~UR5();
@@ -56,10 +56,11 @@ public:
   void push(JointParams params);
   const JointParams &current() const;
   JointParams pop();
+  size_t remaining() const;
 
 private:
   bool reached();
-  bool close_enough(Joint joint, float target, float state);
+  bool close_enough(Joint joint, double target, double state);
 
 private:
   std::queue<JointParams> m_jobs;
