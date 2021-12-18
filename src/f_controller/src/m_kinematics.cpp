@@ -1,5 +1,6 @@
 #include "f_controller/m_kinematics.hpp"
 #include <iostream>
+#include <vector>
 
 const Eigen::VectorXd KIN::a = (Eigen::VectorXd(6) << 0, -0.425, -0.39225, 0, 0, 0).finished();
 const Eigen::VectorXd KIN::d = (Eigen::VectorXd(6) << 0.089159, 0, 0, 0.10915, 0.09465, 0.0823).finished();
@@ -40,33 +41,45 @@ const bool KIN::checkRow(const Eigen::VectorXd &vec) {
 
 const Eigen::VectorXd KIN::bestAngles(const Eigen::VectorXd &actual, const Eigen::MatrixXd &possible) {
 
-  Eigen::VectorXd diff(possible.rows());
+  std::vector<std::pair<double, short>> diffs;
+  std::vector<short> validRows;
+  for (int i = 0; i < possible.rows(); i++) {
+    if (checkRow(possible.row(i).transpose())) {
+      validRows.push_back(i);
+    }
+  }
 
-  for(int i=0; i<possible.rows(); i++){
-    if(checkRow(possible.row(i).transpose())) {
-
-      Eigen::VectorXd tmp(possible.cols());
-      for(int j=0; j<possible.cols(); j++){
-        tmp(j) = abs(possible(i,j)-actual(j));
+  for(int i=0; i<possible.cols() && validRows.size()!=1; i++){
+    for(int j=0; j<possible.rows(); j++){
+      if(std::find(validRows.begin(), validRows.end(), j) != validRows.end()){
+        diffs.push_back(std::make_pair(std::abs(actual(i)-possible(j,i)), j));
       }
-      diff(i) = tmp.sum();
     }
-    else {
-      diff(i) = std::numeric_limits<double>::max();
+    std::sort(diffs.begin(), diffs.end());
+    validRows.resize(0);
+    validRows.push_back(diffs[0].second);
+    for(int k=1; k<diffs.size() && diffs[k].first == diffs[0].first; k++){
+      validRows.push_back(diffs[k].second);
     }
+    /*std::cout << i+1 << "° angles: ";
+    for(short r: validRows){
+      std::cout << r << "\t";
+    }
+    std::cout << std::endl;*/
+    diffs.resize(0);
   }
 
-  Eigen::VectorXd::Index minIndex;
-  diff.minCoeff(&minIndex);
-  if(diff(minIndex)==std::numeric_limits<double>::max()) {
-    throw std::runtime_error("No valid solution found");
-  }
-  return possible.row(minIndex).transpose();
+  //std::cout << "Chosed row " << validRows[0] << std::endl;
+  return possible.row(validRows[0]).transpose();
 }
 
 const Eigen::MatrixXd KIN::p2p(const Eigen::VectorXd &qEs, const Eigen::Vector3d &xEf, const Eigen::Vector3d &phiEf) {
 
-  Eigen::VectorXd qEf = bestAngles(qEs,ik(createHomogeneousMatrix(xEf, eul2rotm(phiEf))));
+  Eigen::MatrixXd thetas=ik(createHomogeneousMatrix(xEf, eul2rotm(phiEf)));
+  //std::cout << "Actual angles: " << qEs.transpose() << std::endl;
+  //std::cout << "Possible angles:" << std::endl << thetas << std::endl;
+  Eigen::VectorXd qEf = bestAngles(qEs,thetas);
+  //std::cout << "Chosed angles: " << qEf.transpose() << std::endl;
   //std::cout << "qEf: " << qEf.transpose() << std::endl;
   //std::cout << "Goal:\t" << KIN::get_position(fk(qEf)).transpose() << std::endl;
 
