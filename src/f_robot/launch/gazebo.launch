@@ -33,7 +33,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
 
   <!-- push robot_description to factory and spawn robot in gazebo at the origin, change x,y,z arguments to spawn in a different position -->
   <node name="spawn_gazebo_model" pkg="gazebo_ros" type="spawn_model"
-        args="-urdf -param robot_description -model robot -z 0.594
+        args="-urdf -param robot_description -model robot -z 0.778
               -J shoulder_lift_joint -1.8
               -J elbow_joint 1.0"
         output="screen" />
