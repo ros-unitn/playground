@@ -1,0 +1,15 @@
+<package>
+  <description brief="m_cv">
+
+     m_cv
+
+  </description>
+  <author>ros</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/m_cv</url>
+  <depend package="sensor_msgs"/>
+  <depend package="rospy"/>
+  <depend package="roscpp"/>
+
+</package>
