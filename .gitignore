@@ -2,3 +2,5 @@ build
 devel
 logs
 src/CMakeLists.txt
+src/m_cv/depth
+src/m_cv/color
