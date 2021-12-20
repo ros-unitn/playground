@@ -1,42 +1,40 @@
 #!/usr/bin/env python3
 
-# rospy for the subscriber
 import rospy
-# ROS Image message
-from sensor_msgs.msg import Image
-# ROS Image message -> OpenCV2 image converter
-from cv_bridge import CvBridge, CvBridgeError
-from imutils import perspective
-from imutils import contours
-# OpenCV2 for saving an image
+
 import cv2
 import numpy as np
 import imutils
+import threading
+
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge
+from imutils import perspective
+from imutils import contours
+
 
 # Instantiate CvBridge
 bridge = CvBridge()
 
+depth_frame = None
+depth_time = None
+depth_frame_lock = threading.Lock()
+
+color_frame = None
+color_time = None
+color_frame_lock = threading.Lock()
+
 
 def depth_callback(msg):
-    print("Received an image!")
     cv_image = bridge.imgmsg_to_cv2(msg, "32FC1")
-    img_norm = cv_image/cv_image.max()*256**2
-    img_norm = img_norm.astype(np.uint16)
-    cv2.resize(img_norm, (1024, 1024))
-    cv2.imshow("Depth", img_norm)
-    cv2.waitKey()
-    time = msg.header.stamp
-    cv2.imwrite('/home/ros/catkin_ws/src/m_depth/depth/' +
-                str(time)+'.png', img_norm)
+    image = cv_image/cv_image.max()*256**2
+    image = image.astype(np.uint16)
+    cv2.resize(image, (1024, 1024))
+    with depth_frame_lock:
+        global depth_frame, depth_time
+        depth_frame = image
+        depth_time = msg.header.stamp
     rospy.sleep(1)
-
-
-def depth_array(msg):
-    cv_image = bridge.imgmsg_to_cv2(msg, "32FC1")
-    max_h = cv_image.max()
-    min_h = cv_image.min()
-    print("max_h: ", max_h, " min_h: ", min_h)
-    cv2.waitKey()
 
 
 def midpoint(ptA, ptB):
@@ -44,8 +42,8 @@ def midpoint(ptA, ptB):
 
 
 def color_callback(msg):
-    image = bridge.imgmsg_to_cv2(msg, "bgr8")
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    cv_image = bridge.imgmsg_to_cv2(msg, "bgr8")
+    gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
     gray = cv2.GaussianBlur(gray, (5, 5), 0)
 
     edged = cv2.Canny(gray, 50, 100)
@@ -57,9 +55,8 @@ def color_callback(msg):
     cnts = imutils.grab_contours(cnts)
 
     (cnts, _) = contours.sort_contours(cnts)
-    pixelsPerMetric = None
 
-    orig = image.copy()
+    image = cv_image.copy()
 
     for c in cnts:
         if cv2.contourArea(c) < 100:
@@ -71,49 +68,58 @@ def color_callback(msg):
 
         box = perspective.order_points(box)
 
-        cv2.drawContours(orig, [box.astype("int")], -1, (0, 255, 0), 2)
+        cv2.drawContours(image, [box.astype("int")], -1, (0, 255, 0), 2)
 
-        #for (x, y) in box:
-        #    cv2.circle(orig, (int(x), int(y)), 5, (0, 0, 255), -1)
+        # for (x, y) in box:
+        #    cv2.circle(image, (int(x), int(y)), 5, (0, 0, 255), -1)
 
-        (tl, tr, br, bl) = box
-        tltrX = midpoint(tl, tr)[0]
+        (tl, tr, _, bl) = box
+        tltr_x = midpoint(tl, tr)[0]
 
-        tlblY = midpoint(tl, bl)[1]
+        tlbl_y = midpoint(tl, bl)[1]
 
-        (centerX, centerY) = (tltrX, tlblY)
+        (center_x, center_y) = (tltr_x, tlbl_y)
 
-        y_min=-1.085345
-        y_max=-0.253645
+        y_min = -1.085345
+        y_max = -0.253645
 
-        x_min=-0.414147
-        x_max=0.417553
+        x_min = -0.414147
+        x_max = 0.417553
 
-        cXp = x_min+(x_max-x_min)*centerX/1024
-        cYp = y_min+(y_max-y_min)*centerY/1024
+        cXp = x_min+(x_max-x_min)*center_x/1024
+        cYp = y_min+(y_max-y_min)*center_y/1024
 
-        cv2.putText(orig, "x: {:.6f}".format(cYp),
-		(int(centerX + 10), int(centerY - 50)), cv2.FONT_HERSHEY_SIMPLEX,
-		0.65, (255, 255, 255), 2)
-        cv2.putText(orig, "y: {:.6f}".format(cXp),
-		(int(centerX + 50), int(centerY - 20)), cv2.FONT_HERSHEY_SIMPLEX,
-		0.65, (255, 255, 255), 2)
+        cv2.putText(image, "x: {:.6f}".format(cYp),
+                    (int(center_x + 10), int(center_y - 50)), cv2.FONT_HERSHEY_SIMPLEX,
+                    0.65, (255, 255, 255), 2)
+        cv2.putText(image, "y: {:.6f}".format(cXp),
+                    (int(center_x + 50), int(center_y - 20)), cv2.FONT_HERSHEY_SIMPLEX,
+                    0.65, (255, 255, 255), 2)
 
-        cv2.circle(orig, (int(centerX), int(centerY)), 5, (255, 0, 0), -1)
+        cv2.circle(image, (int(center_x), int(center_y)), 5, (255, 0, 0), -1)
 
-    #render = cv2.resize(orig, (512, 512))
-    cv2.imshow("Color", orig)
-    cv2.waitKey(0)
+    with color_frame_lock:
+        global color_frame
+        color_frame = image
 
 
 def main():
     rospy.init_node('m_depth')
     depth_topic = "/camera/depth/image_raw"
-    # rospy.Subscriber(depth_topic, Image, depth_callback)
     color_topic = "/camera/color/image_raw"
+    cv2.namedWindow("depth", cv2.WINDOW_NORMAL)
+    cv2.namedWindow("color", cv2.WINDOW_NORMAL)
+    rospy.Subscriber(depth_topic, Image, depth_callback)
     rospy.Subscriber(color_topic, Image, color_callback)
-    #add relative location of image's center
-    rospy.spin()
+    while not rospy.core.is_shutdown():
+        with depth_frame_lock:
+            if depth_frame is not None:
+                cv2.imshow('depth', depth_frame)
+        with color_frame_lock:
+            if color_frame is not None:
+                cv2.imshow('color', color_frame)
+        cv2.waitKey(1)
+        rospy.rostime.wallsleep(0.5)
 
 
 if __name__ == '__main__':
