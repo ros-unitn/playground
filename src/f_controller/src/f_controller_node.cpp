@@ -23,9 +23,29 @@
 #include <string>
 
 //temp
-const bool working_position(ros::Rate &loop_rate, UR5 &ur5, const Eigen::VectorXd &qEs) {
-  Eigen::Vector3d pos = (Eigen::Vector3d() << -0.678645, -0.00214728, 0.507122).finished();
-  Eigen::Vector3d rot = (Eigen::Vector3d() << -1.60254, -3.13141, 0.0257321).finished();
+const bool working_position(ros::Rate &loop_rate, UR5 &ur5, const Eigen::VectorXd &qEs, int argc, char **argv) {
+
+  /*double x=std::atof(argv[1]);
+
+  double y=std::atof(argv[2]);
+
+  double z=std::atof(argv[3]);
+
+  double eul0=std::atof(argv[4]);
+
+  double eul1=std::atof(argv[5]);
+
+  double eul2=std::atof(argv[6]);*/
+
+  /*Eigen::Vector3d pos = (Eigen::Vector3d() << -0.678645, -0.00214728, 0.507122).finished();
+  std::cout << "pos: " << pos.transpose() << std::endl;
+  Eigen::Vector3d rot = (Eigen::Vector3d() << -1.60254, -3.15141, 0.0257321).finished();
+  std::cout << "rot: " << rot.transpose() << std::endl;*/
+
+  Eigen::Vector3d pos = (Eigen::Vector3d() << -0.384410, -0.189166, 0.172122).finished();
+  std::cout << "pos: " << pos.transpose() << std::endl;
+  Eigen::Vector3d rot = (Eigen::Vector3d() << -1.60254, -3.15141, 0.0257321).finished();
+  std::cout << "rot: " << rot.transpose() << std::endl;
 
   Eigen::MatrixXd dest_angles=KIN::ik(KIN::create_homogeneous_matrix(pos, KIN::eul2rotm(rot)));
   Eigen::VectorXd qEf = KIN::best_angles(qEs, dest_angles);
@@ -70,21 +90,9 @@ int main(int argc, char *argv[]) {
     throw std::runtime_error("Joint state message has wrong size");
   }
 
-  if(working_position(loop_rate, ur5, theta)) {
+  if(working_position(loop_rate, ur5, theta, argc, argv)) {
     std::cout << "Success" << std::endl;
   }
-
-  /*double x=std::atof(argv[1]);
-
-  double y=std::atof(argv[2]);
-
-  double z=std::atof(argv[3]);
-
-  double eul0=std::atof(argv[4]);
-
-  double eul1=std::atof(argv[5]);
-
-  double eul2=std::atof(argv[6])*/
 
   //ROS_INFO("theta: %f %f %f %f %f %f", theta(0), theta(1), theta(2), theta(3),
   //         theta(4), theta(5));

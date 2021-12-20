@@ -59,41 +59,51 @@ def color_callback(msg):
     (cnts, _) = contours.sort_contours(cnts)
     pixelsPerMetric = None
 
+    orig = image.copy()
+
     for c in cnts:
         if cv2.contourArea(c) < 100:
             continue
 
-        orig = image.copy()
         box = cv2.minAreaRect(c)
         box = cv2.cv.BoxPoints(box) if imutils.is_cv2() else cv2.boxPoints(box)
         box = np.array(box, dtype="int")
 
         box = perspective.order_points(box)
+
         cv2.drawContours(orig, [box.astype("int")], -1, (0, 255, 0), 2)
 
-        for (x, y) in box:
-            cv2.circle(orig, (int(x), int(y)), 5, (0, 0, 255), -1)
+        #for (x, y) in box:
+        #    cv2.circle(orig, (int(x), int(y)), 5, (0, 0, 255), -1)
 
         (tl, tr, br, bl) = box
-        (tltrX, tltrY) = midpoint(tl, tr)
-        (blbrX, blbrY) = midpoint(bl, br)
+        tltrX = midpoint(tl, tr)[0]
 
-        (tlblX, tlblY) = midpoint(tl, bl)
-        (trbrX, trbrY) = midpoint(tr, br)
+        tlblY = midpoint(tl, bl)[1]
 
-        cv2.circle(orig, (int(tltrX), int(tltrY)), 5, (255, 0, 0), -1)
-        cv2.circle(orig, (int(blbrX), int(blbrY)), 5, (255, 0, 0), -1)
-        cv2.circle(orig, (int(tlblX), int(tlblY)), 5, (255, 0, 0), -1)
-        cv2.circle(orig, (int(trbrX), int(trbrY)), 5, (255, 0, 0), -1)
+        (centerX, centerY) = (tltrX, tlblY)
 
-        cv2.line(orig, (int(tltrX), int(tltrY)),
-                 (int(blbrX), int(blbrY)), (255, 0, 255), 2)
-        cv2.line(orig, (int(tlblX), int(tlblY)),
-                 (int(trbrX), int(trbrY)), (255, 0, 255), 2)
+        y_min=-1.085345
+        y_max=-0.253645
 
-        render = cv2.resize(orig, (512, 512))
-        cv2.imshow("Color", render)
-        cv2.waitKey(0)
+        x_min=-0.414147
+        x_max=0.417553
+
+        cXp = x_min+(x_max-x_min)*centerX/1024
+        cYp = y_min+(y_max-y_min)*centerY/1024
+
+        cv2.putText(orig, "x: {:.6f}".format(cYp),
+		(int(centerX + 10), int(centerY - 50)), cv2.FONT_HERSHEY_SIMPLEX,
+		0.65, (255, 255, 255), 2)
+        cv2.putText(orig, "y: {:.6f}".format(cXp),
+		(int(centerX + 50), int(centerY - 20)), cv2.FONT_HERSHEY_SIMPLEX,
+		0.65, (255, 255, 255), 2)
+
+        cv2.circle(orig, (int(centerX), int(centerY)), 5, (255, 0, 0), -1)
+
+    #render = cv2.resize(orig, (512, 512))
+    cv2.imshow("Color", orig)
+    cv2.waitKey(0)
 
 
 def main():
