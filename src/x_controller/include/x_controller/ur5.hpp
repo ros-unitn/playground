@@ -30,8 +30,8 @@
 #define UR5_WRIST_1_TOPIC "/wrist_1_joint_position_controller"
 #define UR5_WRIST_2_TOPIC "/wrist_2_joint_position_controller"
 #define UR5_WRIST_3_TOPIC "/wrist_3_joint_position_controller"
-#define TARGET "/command"
-#define STATE "/state"
+#define UR5_TARGET "/command"
+#define UR5_STATE "/state"
 
 class UR5 {
 public:

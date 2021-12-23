@@ -260,6 +260,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
       </link>
     </model>
 
-  </world>
 
+  <plugin name="x_linker" filename="libx_linker.so"/>
+  </world>
 </sdf>
