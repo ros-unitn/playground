@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+
+<!-- Copyright (C) 2021 Filippo Rossi
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
+
+<launch>
+  <!-- By default, we are not in debug mode -->
+  <arg name="debug" default="false" />
+
+  <!--
+  By default, hide joint_state_publisher's GUI
+  -->
+  <arg name="use_gui" default="false" />
+
+  <!-- Gazebo specific options -->
+  <arg name="gazebo_gui" default="true" />
+  <arg name="paused" default="true" />
+  <!-- By default, use the urdf location provided from the package -->
+  <arg name="urdf_path" default="$(find x_robot)/urdf/x_robot.urdf.xacro" />
+
+  <!-- launch the gazebo simulator and spawn the robot -->
+  <include file="$(find x_robot)/launch/gazebo.launch">
+    <arg name="paused" value="$(arg paused)" />
+    <arg name="gazebo_gui" value="$(arg gazebo_gui)" />
+    <arg name="urdf_path" value="$(arg urdf_path)" />
+  </include>
+
+  <!-- We do not have a robot connected, so publish fake joint states -->
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+    <param name="use_gui" value="$(arg use_gui)" />
+    <rosparam param="source_list">[/joint_states]</rosparam>
+  </node>
+</launch>

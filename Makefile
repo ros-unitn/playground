@@ -16,8 +16,6 @@
 current_dir = $(shell pwd)
 home = ${HOME}
 
-SHELL := /bin/bash
-
 ifeq ($(OS),Windows_NT)
 	operating_system := Windows
 else
@@ -38,18 +36,17 @@ build:
 %.$(lib_ext): devel
 	cp $(current_dir)/devel/lib/$(@F) $@
 
-%.model:
+$(home)/.gazebo/models:
+	mkdir -p $(home)/.gazebo/models
+
+%.model: $(home)/.gazebo/models
 	cp -R $(current_dir)/models/$(@F) $@
-
-setup: devel 
-	source $(current_dir)/devel/setup.bash
-
 libraries: $(home)/.ros/libgazebo_mimic_joint_plugin.$(lib_ext)
 
 models: $(home)/.gazebo/models/kinect.model $(home)/.gazebo/models/ur5_base.model $(home)/.gazebo/models/cafe_table.model
 
-run: setup libraries models
-	roslaunch f_robot project.launch
+run: devel libraries models
+	roslaunch x_robot project.launch
 
 clean:
 	rm -rf $(home)/.ros/*.$(lib_ext)

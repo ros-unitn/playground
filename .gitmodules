@@ -4,3 +4,9 @@
 [submodule "src/robotiq"]
 	path = src/robotiq
 	url = https://github.com/ros-unitn/robotiq.git
+[submodule "src/x_yolo/yolov5"]
+	path = src/x_yolo/yolov5
+	url = https://github.com/ros-unitn/yolov5
+[submodule "src/x_yolo/legoblocks"]
+	path = src/x_yolo/legoblocks
+	url = git@github.com:ros-unitn/legoblocks.git
