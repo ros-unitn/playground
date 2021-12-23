@@ -12,7 +12,7 @@ from geometry_msgs.msg import Point
 from cv_bridge import CvBridge
 from imutils import perspective
 from imutils import contours
-from object_msgs.msg import objectPosition
+from x_msg.msg import objectPosition
 
 
 # Instantiate CvBridge

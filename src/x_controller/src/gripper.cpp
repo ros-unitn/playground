@@ -4,7 +4,7 @@
 #include <control_msgs/GripperCommandAction.h>
 
 Gripper::Gripper(ros::NodeHandle &n) {
-  actionlib::SimpleActionClient<control_msgs::GripperCommandAction> ac("fibonacci", true);
+  actionlib::SimpleActionClient<control_msgs::GripperCommandAction> ac(ROBOTIQ_GRIPPER_TOPIC, true);
 }
 
 Gripper::~Gripper() {
