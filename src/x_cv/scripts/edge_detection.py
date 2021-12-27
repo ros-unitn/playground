@@ -12,7 +12,7 @@ from geometry_msgs.msg import Point
 from cv_bridge import CvBridge
 from imutils import perspective
 from imutils import contours
-from x_msg.msg import objectPosition
+from x_msgs.srv import objectCall, objectCallResponse
 
 
 # Instantiate CvBridge
@@ -26,14 +26,17 @@ message_frame_lock = threading.Lock()
 
 tavolo_depth = 0.78566104
 
-y_min = -1.085345
+y_min = -1.165345
 y_max = -0.253645
 
-x_min = -0.414147
+x_min = -0.417553
 x_max = 0.417553
 
 tavolo_gazebo = 0.152122
 camera_gazebo = 0.4354239378211242
+
+depth_topic = "/camera/depth/image_raw"
+color_topic = "/camera/color/image_raw"
 
 
 def depth_callback(msg):
@@ -50,10 +53,10 @@ def midpoint(ptA, ptB):
 
 
 def coord_depth(x, y):
-    with depth_frame_lock:
-        if depth_frame is not None:
-            return depth_frame[y, x]
-    return None
+    while True:
+        with depth_frame_lock:
+            if depth_frame is not None:
+                return depth_frame[y, x]
 
 
 def color_callback(msg):
@@ -75,13 +78,15 @@ def color_callback(msg):
 
     with message_frame_lock:
         global message_frame
-        message_frame = objectPosition()
+        message_frame = objectCallResponse()
 
         for c in cnts:
             if cv2.contourArea(c) < 100:
                 continue
 
             box = cv2.minAreaRect(c)
+            #print(rot)
+
             box = cv2.cv.BoxPoints(
                 box) if imutils.is_cv2() else cv2.boxPoints(box)
             box = np.array(box, dtype="int")
@@ -91,6 +96,9 @@ def color_callback(msg):
             (tl, _, br, _) = box
 
             (center_x, center_y) = midpoint(tl, br)
+
+            cv2.circle(image, (int(center_x), int(center_y)),
+                       5, (0, 0, 255), -1)
 
             x_coord = y_min+(y_max-y_min)*center_y/1024
             y_coord = x_min+(x_max-x_min)*center_x/1024
@@ -104,24 +112,26 @@ def color_callback(msg):
 
             message_frame.obj.append(actual)
 
+        cv2.imshow("Image", image)
+        cv2.waitKey()
 
-def main():
-    rospy.init_node('m_cv')
-    depth_topic = "/camera/depth/image_raw"
-    color_topic = "/camera/color/image_raw"
-    rospy.Subscriber(depth_topic, Image, depth_callback)
-    rospy.sleep(1)
-    rospy.Subscriber(color_topic, Image, color_callback)
-    r = rospy.Rate(1)
-    pub = rospy.Publisher('/m_cv/objects', objectPosition, queue_size=10)
-    while not rospy.core.is_shutdown():
+
+def srv_callback(req):
+    depth = rospy.Subscriber(depth_topic, Image, depth_callback)
+    color = rospy.Subscriber(color_topic, Image, color_callback)
+    while True:
         with message_frame_lock:
             if message_frame is not None:
-                rospy.loginfo(message_frame)
-                pub.publish(message_frame)
-                r.sleep()
+                depth.unregister()
+                color.unregister()
+                return message_frame
 
-        rospy.rostime.wallsleep(0.5)
+
+def main():
+    rospy.init_node('x_cv')
+    s = rospy.Service('blocks', objectCall, srv_callback)
+    while not rospy.core.is_shutdown():
+        pass
 
 
 if __name__ == '__main__':

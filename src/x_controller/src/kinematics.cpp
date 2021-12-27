@@ -1,7 +1,8 @@
 #include "x_controller/kinematics.hpp"
+#include <iostream>
 
 constexpr double Kinematics::minT;
-constexpr double Kinematics::maxT;
+//constexpr double Kinematics::maxT;
 constexpr double Kinematics::step;
 
 const Eigen::VectorXd Kinematics::a = (Eigen::VectorXd(6) << 0, -0.425, -0.39225, 0, 0, 0).finished();
@@ -83,7 +84,7 @@ const Eigen::Matrix3d Kinematics::get_orientation(const Eigen::Matrix4d &homo_ma
       .finished();
 }
 
-const Eigen::MatrixXd Kinematics::p2p(const Eigen::VectorXd &qEs, const Eigen::VectorXd &qEf) {
+const Eigen::MatrixXd Kinematics::p2p(const Eigen::VectorXd &qEs, const Eigen::VectorXd &qEf, double maxT) {
 
   Eigen::MatrixXd A(6, 6);
 
@@ -103,15 +104,17 @@ const Eigen::MatrixXd Kinematics::p2p(const Eigen::VectorXd &qEs, const Eigen::V
     A.row(i) = m.solve(b).transpose();
   }
 
-  int n = 1 + (maxT - minT) / step;
+  int n = (maxT - minT) / step;
   Eigen::MatrixXd Th(n, 6);
 
   int rowIndex = 0;
 
-  for (double t = minT; t <= maxT; t += step, rowIndex++) {
+  for (double t = minT; t < maxT; t += step, rowIndex++) {
     for (int i = 0; i < qEs.size(); i++) {
       Th(rowIndex, i) = A(i, 0) + A(i, 1) * t + A(i, 2) * t * t + A(i, 3) * t * t * t + A(i, 4) * t * t * t * t + A(i, 5) * t * t * t * t * t;
+      //std::cout << "Th(" << rowIndex << ", " << i << ") = " << Th(rowIndex, i) << " ";
     }
+    //std::cout << std::endl;
   }
 
   return Th;
