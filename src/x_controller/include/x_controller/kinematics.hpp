@@ -19,7 +19,7 @@ public:
   // get end-effector orientation using homogeneouse matrix
   static const Eigen::Matrix3d get_orientation(const Eigen::Matrix4d &homo_matrix);
   // get trajectory in order to reach end-effector position and orientation
-  static const Eigen::MatrixXd p2p(const Eigen::VectorXd &qEs, const Eigen::VectorXd &qEf);
+  static const Eigen::MatrixXd p2p(const Eigen::VectorXd &qEs, const Eigen::VectorXd &qEf, double maxT);
   // get joint angles from end-effector position and orientation
   static const Eigen::MatrixXd ik(const Eigen::Matrix4d &T60);
   // get homogeneous matrix from forward kinematics
@@ -31,7 +31,7 @@ public:
 
 private:
   static constexpr double minT = 0.0;
-  static constexpr double maxT = 3.0;
+  //static constexpr double maxT = 3.0;
   static constexpr double step = 0.01;
 
   // link lengths

@@ -89,7 +89,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
     </model>
 
     <!-- Cubes -->
-    <model name="cube1">
+    <!--<model name="cube1">
       <pose>0.4 -0.2 0.775 0 0 0</pose>
       <link name="link">
         <pose>0 0 0.025 0 0 0</pose>
@@ -201,7 +201,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
           </material>
         </visual>
       </link>
-    </model>
+    </model>-->
 
     <model name="cube3">
       <pose>0.4 0.2 0.775 0 0 0</pose>
@@ -259,6 +259,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
         </visual>
       </link>
     </model>
+
+  <model name="X2-Y2-Z2">
+    <include>
+      <uri>model://X2-Y2-Z2.model</uri>
+      <pose>0.7 0.2 1 0 0 0</pose>
+    </include>
+  </model>
 
 
   <plugin name="x_linker" filename="libx_linker.so"/>
