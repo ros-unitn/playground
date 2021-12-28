@@ -10,6 +10,7 @@ project(x_msgs)
 find_package(catkin REQUIRED COMPONENTS
     message_generation
     geometry_msgs
+    std_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -46,11 +47,11 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   objectPosition.msg
-#   Message2.msg
-# )
+ add_message_files(
+   FILES
+   objectPosition.msg
+   Block.msg
+ )
 
 ## Generate services in the 'srv' folder
  add_service_files(
@@ -70,6 +71,7 @@ find_package(catkin REQUIRED COMPONENTS
  generate_messages(
    DEPENDENCIES
    geometry_msgs  # Or other packages containing msgs
+   std_msgs
  )
 
 ################################################
