@@ -132,12 +132,20 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  for (geometry_msgs::Point curr : srv.response.obj) {
+  for (x_msgs::Block b : srv.response.list) {
+    geometry_msgs::Point curr = b.obj;
     Eigen::Vector3d pos = (Eigen::Vector3d() << curr.x, curr.y, curr.z).finished();
     objects_position(loop_rate, ur5, gripper, refresh_theta(), pos);
     //gripper.push(0.1);
     //gripper.attach("X2-Y2-Z2", "X2-Y2-Z2::link");
   }
+
+  /*for (geometry_msgs::Point curr : srv.response.list.obj) {
+    Eigen::Vector3d pos = (Eigen::Vector3d() << curr.x, curr.y, curr.z).finished();
+    objects_position(loop_rate, ur5, gripper, refresh_theta(), pos);
+    //gripper.push(0.1);
+    //gripper.attach("X2-Y2-Z2", "X2-Y2-Z2::link");
+  }*/
 
   working_position(loop_rate, ur5, refresh_theta(), 1);
 

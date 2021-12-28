@@ -11,6 +11,8 @@ from pathlib import Path
 import rospy
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Point
+from x_msgs.msg import Block
+from std_msgs.msg import String
 import imutils
 from cv_bridge import CvBridge
 from imutils import perspective
@@ -59,7 +61,8 @@ def detection(image):
         print("callback color")
 
         ros_image = np.frombuffer(image.data, dtype=np.uint8).reshape(image.height, image.width, -1)
-        res = model(ros_image)
+        for i in range(3):
+            res = model(ros_image) #first times it goes bad
         res.render()
         #cv2.imshow("Preview", res.imgs[0][:, :, :]*255)
         #cv2.waitKey(0)
@@ -150,8 +153,13 @@ def detection(image):
 
                 z_coord = tavolo_gazebo+(camera_gazebo-tavolo_gazebo)*object_p
 
-                actual = Point(x_coord, y_coord, z_coord)
-                message_frame.obj.append(actual)
+                p = Point(x_coord, y_coord, z_coord)
+                label = String(obj["label"])
+                b = Block()
+                b.obj = p
+                b.label = label
+
+                message_frame.list.append(b)
                 #print(actual)
 
         cv2.imshow("Image", cv_image)
