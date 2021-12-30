@@ -69,48 +69,43 @@ Eigen::VectorXd refresh_theta() {
   return theta;
 }
 
-// temp
-const bool working_position(ros::Rate &loop_rate, UR5 &ur5, const Eigen::VectorXd &qEs, double maxT) {
-
-  //changing relative position/orientation based on working position
-
-  //double x = std::atof(argv[1]);
-
-  //double y = std::atof(argv[2]);
-
-  //double z = std::atof(argv[3]);
-
-  //double eul0 = std::atof(argv[4]);
-
-  //double eul1 = std::atof(argv[5]);
-
-  //double eul2 = std::atof(argv[6]);
-
-  //Eigen::Vector3d pos = (Eigen::Vector3d() << -0.678645, -0.00214728, 0.507122).finished() + Eigen::Vector3d(x, y, z);
-  //std::cout << "pos: " << pos.transpose() << std::endl;
-  //Eigen::Vector3d rot = (Eigen::Vector3d() << -1.60254, -3.15141, -0.0042679).finished() + Eigen::Vector3d(eul0, eul1, eul2);
-  //std::cout << "rot: " << rot.transpose() << std::endl;
+const bool working_position(ros::Rate &loop_rate, UR5 &ur5, const Eigen::VectorXd &qEs, double maxT, bool newTable) {
 
   Eigen::Vector3d pos = (Eigen::Vector3d() << -0.678645, -0.00214728, 0.507122).finished();
-  std::cout << "pos:" << pos.transpose() << std::endl;
   Eigen::Vector3d rot = (Eigen::Vector3d() << -1.60254, -3.15141, 0.0257321).finished();
-  std::cout << "rot: " << rot.transpose() << std::endl;
 
-  return execute_motion(loop_rate, ur5, pos, rot, qEs, maxT);
+  if(newTable){
+    Eigen::Matrix3d rotate_z_left = Eigen::AngleAxisd(M_PI/2, Eigen::Vector3d::UnitZ()).toRotationMatrix();
+    pos=rotate_z_left*pos;
+    std::cout << "pos:" << pos.transpose() << std::endl;
+    rot=rot+Eigen::Vector3d(M_PI_2, 0.0, 0.0);
+    std::cout << "rot: " << rot.transpose() << std::endl;
+    
+    
+  } else {
+    std::cout << "pos:" << pos.transpose() << std::endl;
+    std::cout << "rot: " << rot.transpose() << std::endl;
+  }
+
+  execute_motion(loop_rate, ur5, pos, rot, refresh_theta(), maxT);
+
+  return true;
+
 }
 
-bool objects_position(ros::Rate &loop_rate, UR5 &ur5, Gripper &gripper, Eigen::VectorXd qEs, const Eigen::Vector3d &pos) {
-
+bool objects_position(ros::Rate &loop_rate, UR5 &ur5, Gripper &gripper, Eigen::VectorXd qEs, Eigen::Vector3d &pos) {
+  
   Eigen::Vector3d over_pos = pos + Eigen::Vector3d(0.0, 0.0, 0.2);
   std::cout << "pos: " << pos.transpose() << std::endl;
   Eigen::Vector3d rot = (Eigen::Vector3d() << -1.60254, -3.15141, 0.0257321).finished();
   std::cout << "rot: " << rot.transpose() << std::endl;
-  execute_motion(loop_rate, ur5, over_pos, rot, qEs, 1);
-  qEs = refresh_theta();
-  execute_motion(loop_rate, ur5, pos, rot, qEs, 0.5);
+  execute_motion(loop_rate, ur5, over_pos, rot, refresh_theta(), 1);
+  execute_motion(loop_rate, ur5, pos, rot, refresh_theta(), 0.5);
   gripper.attach("X2-Y2-Z2", "X2-Y2-Z2::link");
-  execute_motion(loop_rate, ur5, over_pos, rot, qEs, 0.5);
-  working_position(loop_rate, ur5, qEs, 1);
+  //execute_motion(loop_rate, ur5, over_pos, rot, refresh_theta(), 0.5);
+  //working_position(loop_rate, ur5, refresh_theta(), 1, false);
+  working_position(loop_rate, ur5, refresh_theta(), 2, true); //newTable
+  //execute_motion(loop_rate, ur5, pos, rot, refresh_theta(), 0.5);
   gripper.detach();
 
   return true;
@@ -131,6 +126,8 @@ int main(int argc, char *argv[]) {
     std::cout << "Failed to call service" << std::endl;
     return 1;
   }
+  //test_position(loop_rate, ur5, refresh_theta(),1);
+  //working_position(loop_rate, ur5, refresh_theta(), 1);
 
   for (x_msgs::Block b : srv.response.list) {
     geometry_msgs::Point curr = b.obj;
@@ -140,14 +137,7 @@ int main(int argc, char *argv[]) {
     //gripper.attach("X2-Y2-Z2", "X2-Y2-Z2::link");
   }
 
-  /*for (geometry_msgs::Point curr : srv.response.list.obj) {
-    Eigen::Vector3d pos = (Eigen::Vector3d() << curr.x, curr.y, curr.z).finished();
-    objects_position(loop_rate, ur5, gripper, refresh_theta(), pos);
-    //gripper.push(0.1);
-    //gripper.attach("X2-Y2-Z2", "X2-Y2-Z2::link");
-  }*/
-
-  working_position(loop_rate, ur5, refresh_theta(), 1);
+  working_position(loop_rate, ur5, refresh_theta(), 2, false);
 
   std::cout << "Success!" << std::endl;
 

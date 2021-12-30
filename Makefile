@@ -31,7 +31,7 @@ endif
 all: build
 
 build:
-	catkin_make	
+	catkin_make
 
 %.$(lib_ext): devel
 	cp $(current_dir)/devel/lib/$(@F) $@
@@ -43,7 +43,7 @@ $(home)/.gazebo/models:
 	cp -R $(current_dir)/models/$(@F) $@
 libraries: $(home)/.ros/libgazebo_mimic_joint_plugin.$(lib_ext) $(home)/.ros/libx_linker.$(lib_ext)
 
-models: $(home)/.gazebo/models/kinect.model $(home)/.gazebo/models/ur5_base.model $(home)/.gazebo/models/cafe_table.model $(home)/.gazebo/models/X2-Y2-Z2.model
+models: $(home)/.gazebo/models/kinect.model $(home)/.gazebo/models/ur5_base.model $(home)/.gazebo/models/cafe_table.model $(home)/.gazebo/models/blocks.model
 
 run: devel libraries models
 	roslaunch x_robot project.launch
