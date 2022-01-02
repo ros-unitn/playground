@@ -261,9 +261,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
     </model>
 
   <model name="X2-Y2-Z2">
+    <pose>0.7 0.2 1 0 0 0</pose>
     <include>
-      <uri>model://X2-Y2-Z2.model</uri>
-      <pose>0.7 0.2 1 0 0 0</pose>
+      <uri>model://blocks.model</uri>
     </include>
   </model>
 

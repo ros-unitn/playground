@@ -112,8 +112,8 @@ def color_callback(msg):
 
             message_frame.obj.append(actual)
 
-        cv2.imshow("Image", image)
-        cv2.waitKey()
+        #cv2.imshow("Image", image)
+        #cv2.waitKey()
 
 
 def srv_callback(req):

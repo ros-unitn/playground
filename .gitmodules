@@ -10,3 +10,6 @@
 [submodule "src/x_yolo/legoblocks"]
 	path = src/x_yolo/legoblocks
 	url = git@github.com:ros-unitn/legoblocks.git
+[submodule "models/blocks.model"]
+	path = models/blocks.model
+	url = git@github.com:ros-unitn/lego-models.git
