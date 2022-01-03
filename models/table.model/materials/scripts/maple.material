@@ -1,0 +1,14 @@
+material maple
+{
+  technique
+  {
+    pass
+    {
+      texture_unit
+      {
+        texture ../textures/maple.jpg
+        scale 1 1
+      }
+    }
+  }
+}

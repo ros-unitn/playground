@@ -1,4 +1,4 @@
-<?xml version="1.0" ?>
+<?xml version="1.0"?>
 
 <!-- Copyright (C) 2021 Filippo Rossi
 
@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
 <sdf version="1.6">
 
   <world name="ur5_cubes">
-    
+
     <gui>
       <camera name="user_camera">
         <pose>1.4 -2.3 1.4 0.0 0.25 1.9</pose>
@@ -57,7 +57,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
     <model name="kinect">
       <include>
         <uri>model://kinect.model</uri>
-        <pose>0.7 0 1.56 0 1.57 0</pose>
+        <pose>0.75 0 1.365 0 1.57 0</pose>
       </include>
     </model>
 
@@ -72,202 +72,29 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
     <!-- Table -->
     <!-- Table top is at (x,y,z) = (0.7, 0, 0.775) -->
     <!-- Table top size is 0.9x0.9 -->
-    <model name="cafe_table_1">
+    <model name="table">
       <static>true</static>
       <include>
-        <uri>model://cafe_table.model</uri>
-        <pose>0.7 0 0 0 0 0</pose>
+        <uri>model://table.model</uri>
+        <pose>0.75 0 0 0 0 0</pose>
       </include>
     </model>
 
-    <model name="cafe_table_2">
+    <model name="table_drop">
       <static>true</static>
       <include>
-        <uri>model://cafe_table.model</uri>
-        <pose>0 0.7 0 0 0 0</pose>
+        <uri>model://table_drop.model</uri>
+        <pose>0 0.75 0 0 0 1.57</pose>
       </include>
     </model>
 
-    <!-- Cubes -->
-    <!--<model name="cube1">
-      <pose>0.4 -0.2 0.775 0 0 0</pose>
-      <link name="link">
-        <pose>0 0 0.025 0 0 0</pose>
-        <inertial>
-          <mass>0.0565</mass>
-          <inertia>
-            <ixx>2.3541666666666672e-05</ixx>
-            <ixy>0</ixy>
-            <ixz>0</ixz>
-            <iyy>2.3541666666666672e-05</iyy>
-            <iyz>0</iyz>
-            <izz>2.3541666666666672e-05</izz>
-          </inertia>
-        </inertial>
-        <collision name="collision">
-          <geometry>
-            <box>
-              <size>0.05 0.05 0.05</size>
-            </box>
-          </geometry>
-          <surface>
-            <contact>
-              <poissons_ratio>0.347</poissons_ratio>
-              <elastic_modulus>8.8e+09</elastic_modulus>
-              <ode>
-                <kp>100000</kp>
-                <kd>1</kd>
-                <max_vel>1.0</max_vel>
-                <min_depth>0.001</min_depth>
-              </ode>
-            </contact>
-            <friction>
-              <torsional>
-                <coefficient>1.0</coefficient>
-                <use_patch_radius>0</use_patch_radius>
-                <surface_radius>0.05</surface_radius>
-              </torsional>
-            </friction>
-          </surface>
-        </collision>
-        <visual name="visual">
-          <geometry>
-            <box>
-              <size>0.05 0.05 0.05</size>
-            </box>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/Wood</name>
-            </script>
-          </material>
-        </visual>
-      </link>
+    <model name="X2-Y2-Z2">
+      <pose>0.7 0.2 1 0 0 0</pose>
+      <include>
+        <uri>model://blocks.model</uri>
+      </include>
     </model>
 
-    <model name="cube2">
-      <pose>0.4 0 0.775 0 0 0</pose>
-      <link name="link">
-        <pose>0 0 0.025 0 0 0</pose>
-        <inertial>
-          <mass>0.0565</mass>
-          <inertia>
-            <ixx>2.3541666666666672e-05</ixx>
-            <ixy>0</ixy>
-            <ixz>0</ixz>
-            <iyy>2.3541666666666672e-05</iyy>
-            <iyz>0</iyz>
-            <izz>2.3541666666666672e-05</izz>
-          </inertia>
-        </inertial>
-        <collision name="collision">
-          <geometry>
-            <box>
-              <size>0.05 0.05 0.05</size>
-            </box>
-          </geometry>
-          <surface>
-            <contact>
-              <poissons_ratio>0.347</poissons_ratio>
-              <elastic_modulus>8.8e+09</elastic_modulus>
-              <ode>
-                <kp>100000</kp>
-                <kd>1</kd>
-                <max_vel>1.0</max_vel>
-                <min_depth>0.001</min_depth>
-              </ode>
-            </contact>
-            <friction>
-              <torsional>
-                <coefficient>1.0</coefficient>
-                <use_patch_radius>0</use_patch_radius>
-                <surface_radius>0.05</surface_radius>
-              </torsional>
-            </friction>
-          </surface>
-        </collision>
-        <visual name="visual">
-          <geometry>
-            <box>
-              <size>0.05 0.05 0.05</size>
-            </box>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/CeilingTiled</name>
-            </script>
-          </material>
-        </visual>
-      </link>
-    </model>-->
-
-    <model name="cube3">
-      <pose>0.4 0.2 0.775 0 0 0</pose>
-      <link name="link">
-        <pose>0 0 0.025 0 0 0</pose>
-        <inertial>
-          <mass>0.0565</mass>
-          <inertia>
-            <ixx>2.3541666666666672e-05</ixx>
-            <ixy>0</ixy>
-            <ixz>0</ixz>
-            <iyy>2.3541666666666672e-05</iyy>
-            <iyz>0</iyz>
-            <izz>2.3541666666666672e-05</izz>
-          </inertia>
-        </inertial>
-        <collision name="collision">
-          <geometry>
-            <box>
-              <size>0.05 0.05 0.05</size>
-            </box>
-          </geometry>
-          <surface>
-            <contact>
-              <poissons_ratio>0.347</poissons_ratio>
-              <elastic_modulus>8.8e+09</elastic_modulus>
-              <ode>
-                <kp>100000</kp>
-                <kd>1</kd>
-                <max_vel>1.0</max_vel>
-                <min_depth>0.001</min_depth>
-              </ode>
-            </contact>
-            <friction>
-              <torsional>
-                <coefficient>1.0</coefficient>
-                <use_patch_radius>0</use_patch_radius>
-                <surface_radius>0.05</surface_radius>
-              </torsional>
-            </friction>
-          </surface>
-        </collision>
-        <visual name="visual">
-          <geometry>
-            <box>
-              <size>0.05 0.05 0.05</size>
-            </box>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/WoodPallet</name>
-            </script>
-          </material>
-        </visual>
-      </link>
-    </model>
-
-  <model name="X2-Y2-Z2">
-    <pose>0.7 0.2 1 0 0 0</pose>
-    <include>
-      <uri>model://blocks.model</uri>
-    </include>
-  </model>
-
-
-  <plugin name="x_linker" filename="libx_linker.so"/>
+    <plugin name="x_linker" filename="libx_linker.so" />
   </world>
 </sdf>
