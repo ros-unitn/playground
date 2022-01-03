@@ -11,13 +11,13 @@ from pathlib import Path
 import rospy
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Point
-from x_msgs.msg import Block
 from std_msgs.msg import String
 import imutils
 from cv_bridge import CvBridge
 from imutils import perspective
 from imutils import contours
-from x_msgs.srv import objectCall, objectCallResponse
+from x_msgs.msg import Block
+from x_msgs.srv import Blocks, BlocksResponse
 import threading
 
 file_path = Path(__file__)
@@ -100,7 +100,7 @@ def detection(image):
                 results.remove(element)
 
         global message_frame
-        message_frame = objectCallResponse()
+        message_frame = BlocksResponse()
 
         for obj in results:
             y1 = int(obj["y1"])
@@ -195,6 +195,6 @@ if __name__ == '__main__':
     model = torch.hub.load(yolo_repo_path, 'custom', path=yolo_weights_path, source='local')  # local repo
 
     rospy.init_node('ros_yolo')
-    s = rospy.Service('blocks', objectCall, srv_callback)
+    s = rospy.Service('blocks', Blocks, srv_callback)
     while not rospy.core.is_shutdown():
         pass

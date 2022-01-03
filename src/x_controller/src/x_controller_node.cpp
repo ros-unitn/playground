@@ -24,7 +24,8 @@
 #include "x_controller/gripper.hpp"
 #include "x_controller/kinematics.hpp"
 #include "x_controller/ur5.hpp"
-#include "x_msgs/objectCall.h"
+#include "x_msgs/Block.h"
+#include "x_msgs/Blocks.h"
 
 bool execute_motion(ros::Rate &loop_rate, UR5 &ur5, const Eigen::Vector3d &pos, const Eigen::Vector3d &rot, const Eigen::VectorXd &qEs, double maxT) {
   Eigen::MatrixXd dest_angles = Kinematics::ik(Kinematics::create_homogeneous_matrix(pos, Kinematics::eul2rotm(rot)));
@@ -118,8 +119,8 @@ int main(int argc, char *argv[]) {
   Gripper gripper(n);
   ros::Rate loop_rate(100);
 
-  ros::ServiceClient client = n.serviceClient<x_msgs::objectCall>("blocks");
-  x_msgs::objectCall srv;
+  ros::ServiceClient client = n.serviceClient<x_msgs::Blocks>("blocks");
+  x_msgs::Blocks srv;
   if (client.call(srv)) {
     std::cout << "Called service" << std::endl;
   } else {
