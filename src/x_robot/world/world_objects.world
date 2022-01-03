@@ -89,6 +89,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
     </model>
 
     <!-- The LEGO blocks, uncomment the ones you want -->
+    <!-- Positions needs to be redefined -->
 
   <!--<model name="X2-Y2-Z2">
     <pose>0.7 0.2 1 0 0 0</pose>

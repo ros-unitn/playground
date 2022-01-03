@@ -131,7 +131,7 @@ def detection(image):
                     angle=angle+90 
                 else:
                     angle=angle+180
-                print("Angle: "+angle) #TODO: add to message
+                print("Angle: "+str(angle)) #TODO: add to message
 
                 box = cv2.cv.BoxPoints(
                     box) if imutils.is_cv2() else cv2.boxPoints(box)

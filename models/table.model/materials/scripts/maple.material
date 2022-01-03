@@ -6,7 +6,7 @@ material maple
     {
       texture_unit
       {
-        texture ../textures/maple.jpg
+        texture ../textures/Maple.jpg
         scale 1 1
       }
     }

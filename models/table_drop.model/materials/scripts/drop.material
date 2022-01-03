@@ -6,7 +6,7 @@ material drop
     {
       texture_unit
       {
-        texture ../textures/drop.jpg
+        texture ../textures/Drop.jpg
         scale 1 1
       }
     }
