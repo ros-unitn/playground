@@ -41,9 +41,14 @@ $(home)/.gazebo/models:
 
 %.model: $(home)/.gazebo/models
 	cp -R $(current_dir)/models/$(@F) $@
-libraries: $(home)/.ros/libgazebo_mimic_joint_plugin.$(lib_ext) $(home)/.ros/libx_linker.$(lib_ext)
+libraries: $(home)/.ros/libgazebo_mimic_joint_plugin.$(lib_ext) \
+	$(home)/.ros/libx_linker.$(lib_ext)
 
-models: $(home)/.gazebo/models/kinect.model $(home)/.gazebo/models/ur5_base.model $(home)/.gazebo/models/cafe_table.model $(home)/.gazebo/models/blocks.model
+models: $(home)/.gazebo/models/kinect.model \
+	$(home)/.gazebo/models/ur5_base.model \
+	$(home)/.gazebo/models/table.model \
+	$(home)/.gazebo/models/table_drop.model \
+	$(home)/.gazebo/models/blocks.model
 
 run: devel libraries models
 	roslaunch x_robot project.launch

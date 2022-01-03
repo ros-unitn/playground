@@ -1,0 +1,14 @@
+material drop
+{
+  technique
+  {
+    pass
+    {
+      texture_unit
+      {
+        texture ../textures/drop.jpg
+        scale 1 1
+      }
+    }
+  }
+}
