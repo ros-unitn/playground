@@ -88,12 +88,77 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
       </include>
     </model>
 
-    <model name="X2-Y2-Z2">
-      <pose>0.7 0.2 1 0 0 0</pose>
-      <include>
-        <uri>model://blocks.model</uri>
-      </include>
-    </model>
+    <!-- The LEGO blocks, uncomment the ones you want -->
+
+  <!--<model name="X2-Y2-Z2">
+    <pose>0.7 0.2 1 0 0 0</pose>
+    <include>
+      <uri>model://blocks.model/X2-Y2-Z2</uri>
+    </include>
+  </model>-->
+
+  <!--<model name="X1-Y1-Z2">
+    <pose>0.8 0.3 1 0 0 0</pose>
+    <include>
+      <uri>model://blocks.model/X1-Y1-Z2</uri>
+    </include>
+  </model>-->
+
+  <!--<model name="X1-Y2-Z1">
+    <pose>0.5 0.1 1 0 0 0</pose>
+    <include>
+      <uri>model://blocks.model/X1-Y2-Z1</uri>
+    </include>
+  </model>-->
+
+  <!--<model name="X1-Y2-Z2-CHAMFER">
+    <pose>0.6 0.4 1 0 0 0</pose>
+    <include>
+      <uri>model://blocks.model/X1-Y2-Z2-CHAMFER</uri>
+    </include>
+  </model>-->
+
+  <!--<model name="X1-Y2-Z2-TWINFILLET">
+    <pose>0.4 0 1 0 0 0</pose>
+    <include>
+      <uri>model://blocks.model/X1-Y2-Z2-TWINFILLET</uri>
+    </include>
+  </model>-->
+  
+  <!--<model name="X1-Y2-Z2">
+    <pose>0.7 0.2 1 0 0 0</pose>
+    <include>
+      <uri>model://blocks.model/X1-Y2-Z2</uri>
+    </include>
+  </model>-->
+
+  <!--<model name="X1-Y3-Z2">
+    <pose>0.5 0.1 1 0 0 0</pose>
+    <include>
+      <uri>model://blocks.model/X1-Y3-Z2</uri>
+    </include>
+  </model>-->
+
+  <!--<model name="X1-Y3-Z2-FILLET">
+    <pose>0.5 0.1 1.1 0 0 0</pose>
+    <include>
+      <uri>model://blocks.model/X1-Y3-Z2-FILLET</uri>
+    </include>
+  </model>-->
+
+  <!--<model name="X1-Y4-Z2">
+    <pose>0.4 0 1 0 0 0</pose>
+    <include>
+      <uri>model://blocks.model/X1-Y4-Z2</uri>
+    </include>
+  </model>-->
+
+  <!--<model name="X2-Y2-Z2-FILLET">
+    <pose>0.7 0.2 1 0 0 0</pose>
+    <include>
+      <uri>model://blocks.model/X2-Y2-Z2-FILLET</uri>
+    </include>
+  </model>-->
 
     <plugin name="x_linker" filename="libx_linker.so" />
   </world>
