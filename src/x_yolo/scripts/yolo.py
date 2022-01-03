@@ -124,7 +124,14 @@ def detection(image):
                     continue
 
                 box = cv2.minAreaRect(c)
-                #print(rot)
+                angle=box[2]
+                width=box[1][0]
+                height=box[1][1]
+                if(width<height):
+                    angle=angle+90 
+                else:
+                    angle=angle+180
+                print("Angle: "+angle) #TODO: add to message
 
                 box = cv2.cv.BoxPoints(
                     box) if imutils.is_cv2() else cv2.boxPoints(box)
@@ -170,7 +177,6 @@ def detection(image):
 
 
 def depth_callback(img_dep_raw):
-    print("callback depth")
     global img_dep
     img_dep = bridge.imgmsg_to_cv2(img_dep_raw, "32FC1")
     sem_color.release()
