@@ -46,4 +46,6 @@ private:
   static const Eigen::Matrix4d compute_matrix(double theta, short frame);
   // check if matrix contains NaN values
   static const bool check_row(const Eigen::VectorXd &vec);
+  // set 0-closed thetas
+  static const double closest_theta(double th);
 };
