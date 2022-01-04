@@ -28,7 +28,7 @@ const bool Kinematics::check_row(const Eigen::VectorXd &vec) {
 }
 
 const Eigen::VectorXd Kinematics::best_angles(const Eigen::VectorXd &actual, const Eigen::MatrixXd &possible) {
-  // add angle choosing based on joint limits?
+
   std::vector<std::pair<double, short>> diffs;
   std::vector<short> validRows;
   for (int i = 0; i < possible.rows(); i++) {
@@ -118,6 +118,15 @@ const Eigen::MatrixXd Kinematics::p2p(const Eigen::VectorXd &qEs, const Eigen::V
   }
 
   return Th;
+}
+
+const double Kinematics::closest_theta(double th){
+  double two_pi=M_PI*2;
+  if(th>0){
+    return (abs(th-two_pi)<abs(th))?th-two_pi:th;
+  } else {
+    return (abs(th+two_pi)<abs(th))?th+two_pi:th;
+  }
 }
 
 const Eigen::Matrix4d Kinematics::fk(const Eigen::VectorXd &theta) {
@@ -254,6 +263,8 @@ const Eigen::MatrixXd Kinematics::ik(const Eigen::Matrix4d &T60) {
       th1_1, th2_6, th3_6, th4_6, th5_2, th6_2,
       th1_2, th2_7, th3_7, th4_7, th5_3, th6_3,
       th1_2, th2_8, th3_8, th4_8, th5_4, th6_4;
+
+  Th=Th.unaryExpr(&closest_theta);
 
   return Th;
 }

@@ -15,17 +15,41 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#define _USE_MATH_DEFINES
+
 #include <geometry_msgs/Point.h>
 #include <iostream>
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
 #include <string>
+#include <cmath>
+#include <map>
 
 #include "x_controller/gripper.hpp"
 #include "x_controller/kinematics.hpp"
 #include "x_controller/ur5.hpp"
 #include "x_msgs/Block.h"
 #include "x_msgs/Blocks.h"
+
+std::map<std::string, Eigen::Vector3d> drop_points;
+
+void initialize_map(){
+
+  drop_points["X1-Y1-Z2"] = Eigen::Vector3d(-0.3, -0.45, 0.3);
+  drop_points["X1-Y2-Z2"] = Eigen::Vector3d(-0.12, -0.45, 0.3);
+  drop_points["X1-Y3-Z2"] = Eigen::Vector3d(0.09, -0.45, 0.3);
+  drop_points["X1-Y4-Z2"] = Eigen::Vector3d(0.3, -0.45, 0.3);
+
+  drop_points["X1-Y2-Z1"] = Eigen::Vector3d(-0.3, -0.61, 0.3);
+  drop_points["X1-Y2-Z2-TWINFILLET"] = Eigen::Vector3d(-0.12, -0.61, 0.3);
+  drop_points["X1-Y3-Z2-FILLET"] = Eigen::Vector3d(0.09, -0.61, 0.3);
+  drop_points["X2-Y2-Z2"] = Eigen::Vector3d(0.3, -0.61, 0.3);
+
+  drop_points["X1-Y4-Z1"] = Eigen::Vector3d(-0.3, -0.79, 0.3);
+  drop_points["X1-Y2-Z2-CHAMFER"] = Eigen::Vector3d(-0.12, -0.79, 0.3);
+  drop_points["X2-Y2-Z2-FILLET"] = Eigen::Vector3d(0.3, -0.79, 0.3);
+
+}
 
 bool execute_motion(ros::Rate &loop_rate, UR5 &ur5, const Eigen::Vector3d &pos, const Eigen::Vector3d &rot, const Eigen::VectorXd &qEs, double maxT) {
   Eigen::MatrixXd dest_angles = Kinematics::ik(Kinematics::create_homogeneous_matrix(pos, Kinematics::eul2rotm(rot)));
@@ -70,20 +94,20 @@ Eigen::VectorXd refresh_theta() {
   return theta;
 }
 
-const bool working_position(ros::Rate &loop_rate, UR5 &ur5, const Eigen::VectorXd &qEs, double maxT, bool newTable) {
+const bool working_position(ros::Rate &loop_rate, UR5 &ur5, const Eigen::VectorXd &qEs, double maxT, bool newTable, std::string block_name) {
 
-  Eigen::Vector3d pos = (Eigen::Vector3d() << -0.678645, -0.00214728, 0.507122).finished();
-  Eigen::Vector3d rot = (Eigen::Vector3d() << -1.60254, -3.15141, 0.0257321).finished();
+  Eigen::Vector3d pos;
+  Eigen::Vector3d rot;
 
   if(newTable){
-    Eigen::Matrix3d rotate_z_left = Eigen::AngleAxisd(M_PI/2, Eigen::Vector3d::UnitZ()).toRotationMatrix();
-    pos=rotate_z_left*pos;
+    pos = drop_points[block_name];
     std::cout << "pos:" << pos.transpose() << std::endl;
-    rot=rot+Eigen::Vector3d(M_PI_2, 0.0, 0.0);
+    rot << 0.0, -M_PI, 0.0;
     std::cout << "rot: " << rot.transpose() << std::endl;
     
-    
   } else {
+    pos << -0.75, 0.0, 0.3;
+    rot << -M_PI_2, -M_PI, 0.0;
     std::cout << "pos:" << pos.transpose() << std::endl;
     std::cout << "rot: " << rot.transpose() << std::endl;
   }
@@ -94,19 +118,22 @@ const bool working_position(ros::Rate &loop_rate, UR5 &ur5, const Eigen::VectorX
 
 }
 
-bool objects_position(ros::Rate &loop_rate, UR5 &ur5, Gripper &gripper, Eigen::VectorXd qEs, Eigen::Vector3d &pos) {
+bool objects_position(ros::Rate &loop_rate, UR5 &ur5, Gripper &gripper, Eigen::VectorXd qEs, Eigen::Vector3d &pos, std::string block_name) {
   
+
   Eigen::Vector3d over_pos = pos + Eigen::Vector3d(0.0, 0.0, 0.2);
   std::cout << "pos: " << pos.transpose() << std::endl;
-  Eigen::Vector3d rot = (Eigen::Vector3d() << -1.60254, -3.15141, 0.0257321).finished();
+  Eigen::Vector3d rot = (Eigen::Vector3d() << 0.0, -M_PI, 0.0).finished();
   std::cout << "rot: " << rot.transpose() << std::endl;
   execute_motion(loop_rate, ur5, over_pos, rot, refresh_theta(), 1);
   execute_motion(loop_rate, ur5, pos, rot, refresh_theta(), 0.5);
-  gripper.attach("X2-Y2-Z2", "X2-Y2-Z2::link");
-  //execute_motion(loop_rate, ur5, over_pos, rot, refresh_theta(), 0.5);
-  //working_position(loop_rate, ur5, refresh_theta(), 1, false);
-  working_position(loop_rate, ur5, refresh_theta(), 2, true); //newTable
-  //execute_motion(loop_rate, ur5, pos, rot, refresh_theta(), 0.5);
+
+  //gripper.push(0.2);
+  gripper.attach(block_name, block_name+"::link");
+
+  working_position(loop_rate, ur5, refresh_theta(), 2, true, block_name); //newTable
+
+  //gripper.push(0.0);
   gripper.detach();
 
   return true;
@@ -119,6 +146,8 @@ int main(int argc, char *argv[]) {
   Gripper gripper(n);
   ros::Rate loop_rate(100);
 
+  initialize_map();
+
   ros::ServiceClient client = n.serviceClient<x_msgs::Blocks>("blocks");
   x_msgs::Blocks srv;
   if (client.call(srv)) {
@@ -128,17 +157,16 @@ int main(int argc, char *argv[]) {
     return 1;
   }
   //test_position(loop_rate, ur5, refresh_theta(),1);
-  //working_position(loop_rate, ur5, refresh_theta(), 1);
-
+  //working_position(loop_rate, ur5, refresh_theta(), 2, true, argv);
+  
   for (x_msgs::Block b : srv.response.list) {
     geometry_msgs::Point curr = b.obj;
-    Eigen::Vector3d pos = (Eigen::Vector3d() << curr.x, curr.y, curr.z).finished();
-    objects_position(loop_rate, ur5, gripper, refresh_theta(), pos);
-    //gripper.push(0.1);
-    //gripper.attach("X2-Y2-Z2", "X2-Y2-Z2::link");
+    std::string block_name = b.label;
+    Eigen::Vector3d pos = (Eigen::Vector3d() << curr.x, curr.y, 0.175).finished();
+    objects_position(loop_rate, ur5, gripper, refresh_theta(), pos, block_name);
   }
 
-  working_position(loop_rate, ur5, refresh_theta(), 2, false);
+  //working_position(loop_rate, ur5, refresh_theta(), 2, false, "");
 
   std::cout << "Success!" << std::endl;
 

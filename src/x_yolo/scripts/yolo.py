@@ -30,16 +30,16 @@ names = ['X1-Y1-Z2', 'X1-Y2-Z1', 'X1-Y2-Z2', 'X1-Y2-Z2-CHAMFER', 'X1-Y2-Z2-TWINF
          'X1-Y3-Z2', 'X1-Y3-Z2-FILLET', 'X1-Y4-Z1', 'X1-Y4-Z2', 'X2-Y2-Z2', 'X2-Y2-Z2-FILLET']
 
          
-tavolo_depth = 0.78566104
+tavolo_depth = 0.78566104 # wrong
 
-y_min = -1.165345
-y_max = -0.253645
+y_min = -1.075
+y_max = -0.375
 
-x_min = -0.417553
-x_max = 0.417553
+x_min = -0.375
+x_max = 0.375
 
-tavolo_gazebo = 0.152122
-camera_gazebo = 0.4354239378211242
+tavolo_gazebo = 0.175 # probably good
+camera_gazebo = 0.4354239378211242 #wrong
 
 # Instantiate CvBridge
 bridge = CvBridge()
@@ -161,7 +161,7 @@ def detection(image):
                 z_coord = tavolo_gazebo+(camera_gazebo-tavolo_gazebo)*object_p
 
                 p = Point(x_coord, y_coord, z_coord)
-                label = String(obj["label"])
+                label = obj["label"]
                 b = Block()
                 b.obj = p
                 b.label = label
@@ -169,8 +169,8 @@ def detection(image):
                 message_frame.list.append(b)
                 #print(actual)
 
-        cv2.imshow("Image", cv_image)
-        cv2.waitKey()
+        #cv2.imshow("Image", cv_image)
+        #cv2.waitKey()
 
         print(message_frame)
         sem_return.release()
