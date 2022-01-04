@@ -2,7 +2,7 @@
 #include <iostream>
 
 constexpr double Kinematics::minT;
-//constexpr double Kinematics::maxT;
+// constexpr double Kinematics::maxT;
 constexpr double Kinematics::step;
 
 const Eigen::VectorXd Kinematics::a = (Eigen::VectorXd(6) << 0, -0.425, -0.39225, 0, 0, 0).finished();
@@ -112,20 +112,20 @@ const Eigen::MatrixXd Kinematics::p2p(const Eigen::VectorXd &qEs, const Eigen::V
   for (double t = minT; t < maxT; t += step, rowIndex++) {
     for (int i = 0; i < qEs.size(); i++) {
       Th(rowIndex, i) = A(i, 0) + A(i, 1) * t + A(i, 2) * t * t + A(i, 3) * t * t * t + A(i, 4) * t * t * t * t + A(i, 5) * t * t * t * t * t;
-      //std::cout << "Th(" << rowIndex << ", " << i << ") = " << Th(rowIndex, i) << " ";
+      // std::cout << "Th(" << rowIndex << ", " << i << ") = " << Th(rowIndex, i) << " ";
     }
-    //std::cout << std::endl;
+    // std::cout << std::endl;
   }
 
   return Th;
 }
 
-const double Kinematics::closest_theta(double th){
-  double two_pi=M_PI*2;
-  if(th>0){
-    return (abs(th-two_pi)<abs(th))?th-two_pi:th;
+const double Kinematics::closest_theta(double th) {
+  double two_pi = M_PI * 2;
+  if (th > 0) {
+    return (abs(th - two_pi) < abs(th)) ? th - two_pi : th;
   } else {
-    return (abs(th+two_pi)<abs(th))?th+two_pi:th;
+    return (abs(th + two_pi) < abs(th)) ? th + two_pi : th;
   }
 }
 
@@ -264,7 +264,7 @@ const Eigen::MatrixXd Kinematics::ik(const Eigen::Matrix4d &T60) {
       th1_2, th2_7, th3_7, th4_7, th5_3, th6_3,
       th1_2, th2_8, th3_8, th4_8, th5_4, th6_4;
 
-  Th=Th.unaryExpr(&closest_theta);
+  Th = Th.unaryExpr(&closest_theta);
 
   return Th;
 }

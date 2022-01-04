@@ -31,7 +31,7 @@ public:
 
 private:
   static constexpr double minT = 0.0;
-  //static constexpr double maxT = 3.0;
+  // static constexpr double maxT = 3.0;
   static constexpr double step = 0.01;
 
   // link lengths

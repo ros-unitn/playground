@@ -36,10 +36,12 @@ bool LinkerPlugin::attach(std::string model1, std::string link1,
   } else {
     ROS_INFO_STREAM("Creating new joint.");
   }
+
   j.model1 = model1;
   j.link1 = link1;
   j.model2 = model2;
   j.link2 = link2;
+
   ROS_DEBUG_STREAM("Getting BasePtr of " << model1);
   physics::BasePtr b1 = m_world->ModelByName(model1);
 
@@ -53,10 +55,10 @@ bool LinkerPlugin::attach(std::string model1, std::string link1,
     ROS_ERROR_STREAM(model2 << " model was not found");
     return false;
   }
-
-  ROS_DEBUG_STREAM("Casting into ModelPtr");
+  
   physics::ModelPtr m1(dynamic_cast<physics::Model *>(b1.get()));
   j.m1 = m1;
+  
   physics::ModelPtr m2(dynamic_cast<physics::Model *>(b2.get()));
   j.m2 = m2;
 
@@ -66,17 +68,16 @@ bool LinkerPlugin::attach(std::string model1, std::string link1,
     ROS_ERROR_STREAM(link1 << " link was not found");
     return false;
   }
-  if (l1->GetInertial() == NULL) {
-    ROS_ERROR_STREAM("link1 inertia is NULL!");
-  } else
-    ROS_DEBUG_STREAM("link1 inertia is not NULL, for example, mass is: " << l1->GetInertial()->Mass());
+  
   j.l1 = l1;
+  
   ROS_DEBUG_STREAM("Getting link: '" << link2 << "' from model: '" << model2 << "'");
   physics::LinkPtr l2 = m2->GetLink(link2);
   if (l2 == NULL) {
     ROS_ERROR_STREAM(link2 << " link was not found");
     return false;
   }
+
   if (l2->GetInertial() == NULL) {
     ROS_ERROR_STREAM("link2 inertia is NULL!");
   } else
@@ -97,6 +98,9 @@ bool LinkerPlugin::attach(std::string model1, std::string link1,
   j.joint->SetLowerLimit(0, 0);
   j.joint->Init();
 
+  j.m1->SetCollideMode("none");
+  j.m2->SetCollideMode("none");
+
   return true;
 }
 
@@ -106,6 +110,8 @@ bool LinkerPlugin::detach(std::string model1, std::string link1,
   FixedJoint j;
   if (get_joint(model1, link1, model2, link2, j)) {
     j.joint->Detach();
+    j.m1->SetCollideMode("all");
+    j.m2->SetCollideMode("all");
     return true;
   }
 
