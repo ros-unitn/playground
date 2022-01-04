@@ -18,9 +18,9 @@
 #pragma once
 #include <queue>
 
+#include <control_msgs/JointControllerState.h>
 #include <ros/ros.h>
 #include <std_msgs/Float64.h>
-#include <control_msgs/JointControllerState.h>
 
 #include "x_controller/params.hpp"
 

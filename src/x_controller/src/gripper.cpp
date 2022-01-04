@@ -42,7 +42,7 @@ bool Gripper::attach(const std::string &model, const std::string &link) {
   if (m_attached) {
     return false;
   }
-  
+
   m_attached = true;
   m_attached_model = model;
   m_attached_link = link;
@@ -52,7 +52,7 @@ bool Gripper::attach(const std::string &model, const std::string &link) {
   srv.request.link_name_1 = GRIPPER_LINK;
   srv.request.model_name_2 = model;
   srv.request.link_name_2 = link;
-  
+
   bool call = m_attach_client.call(srv);
   if (!call) {
     ROS_ERROR("attach service call failed");
@@ -72,7 +72,7 @@ bool Gripper::detach() {
   srv.request.link_name_1 = GRIPPER_LINK;
   srv.request.model_name_2 = m_attached_model;
   srv.request.link_name_2 = m_attached_link;
-  
+
   bool call = m_detach_client.call(srv);
   if (!call) {
     ROS_ERROR("attach service call failed");

@@ -57,7 +57,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
     <model name="kinect">
       <include>
         <uri>model://kinect.model</uri>
-        <pose>0.75 0 1.365 0 1.57 0</pose>
+        <pose>0.75 0 1.363 0 1.57 0</pose>
       </include>
     </model>
 
