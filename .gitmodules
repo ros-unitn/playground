@@ -12,4 +12,4 @@
 	url = git@github.com:ros-unitn/legoblocks.git
 [submodule "models/blocks.model"]
 	path = models/blocks.model
-	url = git@github.com:ros-unitn/lego-models.git
+	url = git@github.com:ros-unitn/legomodels.git
