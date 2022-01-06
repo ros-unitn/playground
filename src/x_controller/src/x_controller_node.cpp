@@ -155,6 +155,8 @@ int main(int argc, char *argv[]) {
   // test_position(loop_rate, ur5, refresh_theta(),1);
   // working_position(loop_rate, ur5, refresh_theta(), 2, true, argv);
 
+  std::cout << "Found " << srv.response.list.size() << " blocks" << std::endl;
+
   for (x_msgs::Block b : srv.response.list) {
     geometry_msgs::Point curr = b.obj;
     std::string block_name = b.label;

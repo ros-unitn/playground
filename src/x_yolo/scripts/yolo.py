@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 import sys
+from threading import Lock
 from pathlib import Path
 
 import cv2
@@ -58,18 +59,22 @@ bridge = CvBridge()
 # trained yolo model
 model = None
 
+raw_color_lock = Lock()
+raw_depth_lock = Lock()
+raw_color = None
+raw_depth = None
+
 def midpoint(ptA, ptB):
     return ((ptA[0] + ptB[0]) * 0.5, (ptA[1] + ptB[1]) * 0.5)
 
 
 def detection(raw_color, raw_depth):
-    
     ros_image = np.frombuffer(raw_color.data, dtype=np.uint8).reshape(
         raw_color.height, raw_color.width, -1
     )
 
     res = model(ros_image)
-    res.render()
+    res.show()
 
     color = bridge.imgmsg_to_cv2(raw_color, "bgr8")
     depth = bridge.imgmsg_to_cv2(raw_depth, "32FC1")
@@ -78,8 +83,9 @@ def detection(raw_color, raw_depth):
     gray = cv2.GaussianBlur(gray, (5, 5), 0)
 
     results = []
-    for row in res.xyxy[0]:
+    for i, row in enumerate(res.xyxy[0]):
         obj = {
+            "id": i,
             "label": names[int(row[5])],
             "x1": row[0],
             "y1": row[1],
@@ -89,25 +95,29 @@ def detection(raw_color, raw_depth):
         }
         results.append(obj)
 
-    to_remove = []
+    duplicate = []
 
     for obj in results:
+        print(obj)
         for obj2 in results:
-            if obj["label"] != obj2["label"]:
-                if (
-                    abs(obj["x1"] - obj2["x1"]) < 5
-                    and abs(obj["y1"] - obj2["y1"]) < 5
-                    and abs(obj["x2"] - obj2["x2"]) < 5
-                    and abs(obj["y2"] - obj2["y2"]) < 5
-                ):
+            if (
+                obj["id"] != obj2["id"]
+                and abs(obj["x1"] - obj2["x1"]) < 5
+                and abs(obj["y1"] - obj2["y1"]) < 5
+                and abs(obj["x2"] - obj2["x2"]) < 5
+                and abs(obj["y2"] - obj2["y2"]) < 5
+            ):
+                if obj["label"] == obj2["label"]:
+                    duplicate.append(obj2)
+                else: # two different classifications
                     less_confidence = obj
                     if obj2["confidence"] < obj["confidence"]:
                         less_confidence = obj2
-                    to_remove.append(less_confidence)
+                    duplicate.append(less_confidence)
 
     # to_remove = list(dict.fromkeys(to_remove)) #do this to remove duplicates, otherwise it will try to remove something that does not exists
 
-    for element in to_remove:
+    for element in duplicate:
         if element in results:
             results.remove(element)
 
@@ -130,60 +140,74 @@ def detection(raw_color, raw_depth):
         cnts = imutils.grab_contours(cnts)
 
         (cnts, _) = contours.sort_contours(cnts)
+        cnts = list(filter(lambda x: cv2.contourArea(x) >= 100, cnts))
+        assert len(cnts) >= 1
 
-        for c in cnts:
-            if cv2.contourArea(c) < 100:
-                continue
+        c = cnts[0]
 
-            box = cv2.minAreaRect(c)
-            angle = box[2]
-            width = box[1][0]
-            height = box[1][1]
-            if width < height:
-                angle = angle + 90
-            else:
-                angle = angle + 180
-            print("Angle: " + str(angle))  # TODO: add to message
+        box = cv2.minAreaRect(c)
+        angle = box[2]
+        width = box[1][0]
+        height = box[1][1]
+        if width < height:
+            angle = angle + 90
+        else:
+            angle = angle + 180
 
-            box = cv2.cv.BoxPoints(box) if imutils.is_cv2() else cv2.boxPoints(box)
-            box = np.array(box, dtype="int")
+        box = cv2.cv.BoxPoints(box) if imutils.is_cv2() else cv2.boxPoints(box)
+        box = np.array(box, dtype="int")
 
-            box = perspective.order_points(box)
+        box = perspective.order_points(box)
 
-            (tl, _, br, _) = box
+        (tl, _, br, _) = box
 
-            (center_x, center_y) = midpoint(tl, br)
-            center_x = center_x + obj["x1"]
-            center_y = center_y + obj["y1"]
+        (center_x, center_y) = midpoint(tl, br)
+        center_x = center_x + obj["x1"]
+        center_y = center_y + obj["y1"]
 
-            cv2.circle(color, (int(center_x), int(center_y)), 5, (0, 0, 255), -1)
+        cv2.circle(color, (int(center_x), int(center_y)), 5, (0, 0, 255), -1)
 
-            x_coord = y_min + (y_max - y_min) * center_y / 1024
-            y_coord = x_min + (x_max - x_min) * center_x / 1024
+        x_coord = y_min + (y_max - y_min) * center_y / 1024
+        y_coord = x_min + (x_max - x_min) * center_x / 1024
 
-            object_depth = depth[int(center_y), int(center_x)]
-            object_p = (object_depth - table_depth) / (0 - table_depth)
+        object_depth = depth[int(center_y), int(center_x)]
+        object_p = (object_depth - table_depth) / (0 - table_depth)
 
-            z_coord = table_gazebo + (camera_gazebo - table_gazebo) * object_p
-            
-            p = Point(x_coord, y_coord, z_coord)
-            label = obj["label"]
-            b = Block()
-            b.obj = p
-            b.angle = np.radians(angle)
-            b.label = label
+        z_coord = table_gazebo + (camera_gazebo - table_gazebo) * object_p
+        
+        p = Point(x_coord, y_coord, z_coord)
+        label = obj["label"]
+        b = Block()
+        b.obj = p
+        b.angle = np.radians(angle)
+        b.label = label
 
-            message_frame.list.append(b)
+        message_frame.list.append(b)
 
     print(message_frame)
     return message_frame
 
 
+def raw_color_callback(img: Image):
+    if raw_color_lock.acquire(blocking=False):
+        global raw_color
+        raw_color = img
+        raw_color_lock.release()
+    
+def raw_depth_callback(img: Image):
+    if raw_depth_lock.acquire(blocking=False):
+        global raw_depth
+        raw_depth = img
+        raw_depth_lock.release()
+
 def srv_callback(_):
-    print("service request received")
-    color = rospy.wait_for_message("/camera/color/image_raw", Image)
-    depth = rospy.wait_for_message("/camera/depth/image_raw", Image)
-    return detection(color, depth)
+    global raw_color, raw_depth
+    raw_color_lock.acquire()
+    raw_depth_lock.acquire()
+    result = detection(raw_color, raw_depth)
+    raw_depth_lock.release()
+    raw_color_lock.release()
+    return result
 
 
 if __name__ == "__main__":
@@ -191,6 +215,9 @@ if __name__ == "__main__":
     model = torch.hub.load(
         yolo_repo_path, "custom", path=yolo_weights_path, source="local"
     )  # local repo
+
+    a = rospy.topics.Subscriber("/camera/color/image_raw", Image, raw_color_callback)
+    b = rospy.topics.Subscriber("/camera/depth/image_raw", Image, raw_depth_callback)
 
     rospy.init_node("x_yolo")
     s = rospy.Service("blocks", Blocks, srv_callback)
