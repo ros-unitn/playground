@@ -69,8 +69,7 @@ def detection(raw_color, raw_depth):
         raw_color.height, raw_color.width, -1
     )
 
-    for _ in range(3):
-        res = model(ros_image)  # first times it goes bad
+    res = model(ros_image)
     res.render()
 
     color = bridge.imgmsg_to_cv2(raw_color, "bgr8")
@@ -193,6 +192,6 @@ if __name__ == "__main__":
         yolo_repo_path, "custom", path=yolo_weights_path, source="local"
     )  # local repo
 
-    rospy.init_node("ros_yolo")
+    rospy.init_node("x_yolo")
     s = rospy.Service("blocks", Blocks, srv_callback)
     rospy.spin()
