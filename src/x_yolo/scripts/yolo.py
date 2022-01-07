@@ -42,16 +42,16 @@ names = [
 ]
 
 
-table_depth = 0.78566104  # wrong
+table_depth = 0.6482981
 
-y_min = -1.075
-y_max = -0.375
+y_min = -1.115
+y_max = -0.385
 
-x_min = -0.375
-x_max = 0.375
+x_min = -0.365
+x_max = 0.365
 
-table_gazebo = 0.175  # probably good
-camera_gazebo = 0.4354239378211242  # wrong
+table_gazebo = 0.16
+camera_gazebo = 0.7314285714285716
 
 bridge = CvBridge()
 
@@ -63,7 +63,6 @@ def midpoint(ptA, ptB):
 
 
 def detection(raw_color, raw_depth):
-    print("callback color")
     
     ros_image = np.frombuffer(raw_color.data, dtype=np.uint8).reshape(
         raw_color.height, raw_color.width, -1
@@ -166,11 +165,12 @@ def detection(raw_color, raw_depth):
             object_p = (object_depth - table_depth) / (0 - table_depth)
 
             z_coord = table_gazebo + (camera_gazebo - table_gazebo) * object_p
-
+            
             p = Point(x_coord, y_coord, z_coord)
             label = obj["label"]
             b = Block()
             b.obj = p
+            b.angle = np.radians(angle)
             b.label = label
 
             message_frame.list.append(b)
