@@ -74,7 +74,6 @@ def detection(raw_color, raw_depth):
     )
 
     res = model(ros_image)
-    res.show()
 
     color = bridge.imgmsg_to_cv2(raw_color, "bgr8")
     depth = bridge.imgmsg_to_cv2(raw_depth, "32FC1")
@@ -216,9 +215,8 @@ if __name__ == "__main__":
         yolo_repo_path, "custom", path=yolo_weights_path, source="local"
     )  # local repo
 
+    rospy.init_node("x_yolo_node")
     a = rospy.topics.Subscriber("/camera/color/image_raw", Image, raw_color_callback)
     b = rospy.topics.Subscriber("/camera/depth/image_raw", Image, raw_depth_callback)
-
-    rospy.init_node("x_yolo")
     s = rospy.Service("blocks", Blocks, srv_callback)
     rospy.spin()
