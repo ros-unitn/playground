@@ -125,7 +125,7 @@ bool objects_position(ros::Rate &loop_rate, UR5 &ur5, Gripper &gripper, Eigen::V
   execute_motion(loop_rate, ur5, pos, rot, refresh_theta(), 0.5);
 
   gripper.push(0.2);
-  gripper.attach(block_name, block_name + "::link");
+  gripper.attach_below();
 
   working_position(loop_rate, ur5, refresh_theta(), 2, true, block_name); // newTable
 

@@ -16,20 +16,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
 
 <launch>
-  <arg name="paused" default="true" />
-  <arg name="gazebo_gui" default="true" />
-  <arg name="urdf_path" default="$(find x_robot)/urdf/x_robot.urdf.xacro" />
-
-  <!-- startup simulated world -->
-  <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" default="$(find x_robot)/world/world_objects.world" />
-    <arg name="paused" value="$(arg paused)" />
-    <arg name="gui" value="$(arg gazebo_gui)" />
-    <arg name="verbose" value="true" />
-  </include>
+  <arg name="urdf_xacro" default="$(find x_robot)/urdf/x_robot.urdf.xacro" />
 
   <!-- send robot urdf to param server -->
-  <param name="robot_description" command="$(find xacro)/xacro $(arg urdf_path)" />
+  <param name="robot_description" command="$(find xacro)/xacro $(arg urdf_xacro)" />
 
   <!-- push robot_description to factory and spawn robot in gazebo at the origin, change x,y,z arguments to spawn in a different position -->
   <node name="spawn_gazebo_model" pkg="gazebo_ros" type="spawn_model"
@@ -37,6 +27,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
               -J shoulder_lift_joint -1.8
               -J elbow_joint 1.0"
         output="screen" />
+
+  <!-- We do not have a robot connected, so publish fake joint states -->
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+    <param name="use_gui" value="false" />
+    <rosparam param="source_list">[/joint_states]</rosparam>
+  </node>
 
   <include file="$(find x_robot)/launch/controllers.launch" />
 </launch>

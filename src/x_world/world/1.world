@@ -15,10 +15,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
 
-<sdf version="1.6">
-
-  <world name="ur5_cubes">
-
+<sdf version="1.6" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <world name="task_1">
     <gui>
       <camera name="user_camera">
         <pose>1.4 -2.3 1.4 0.0 0.25 1.9</pose>
@@ -50,10 +48,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
       <pose>0 0 0 0 0 0</pose>
     </include>
 
-    <!-- A gazebo links attacher -->
-    <!-- <plugin name="ros_link_attacher_plugin" -->
-    <!--         filename="libgazebo_ros_link_attacher.so"/> -->
-
+    <!-- Robot base -->
     <model name="kinect">
       <include>
         <uri>model://kinect.model</uri>
@@ -61,7 +56,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
       </include>
     </model>
 
-    <!-- The robot base -->
+    <!-- Robot base -->
     <model name="ur5_base">
       <include>
         <uri>model://ur5_base.model</uri>
@@ -70,8 +65,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
     </model>
 
     <!-- Table -->
-    <!-- Table top is at (x,y,z) = (0.7, 0, 0.775) -->
-    <!-- Table top size is 0.9x0.9 -->
     <model name="table">
       <static>true</static>
       <include>
@@ -80,6 +73,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
       </include>
     </model>
 
+    <!-- Table Drop -->
     <model name="table_drop">
       <static>true</static>
       <include>
@@ -88,80 +82,29 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
       </include>
     </model>
 
-    <!-- The LEGO blocks, uncomment the ones you want -->
-    <!-- Positions needs to be redefined -->
-
-  <!--<model name="X2-Y2-Z2">
-    <pose>0.7 0.2 1 0 0 0</pose>
-    <include>
-      <uri>model://blocks.model/X2-Y2-Z2</uri>
-    </include>
-  </model>-->
-
-  <!--<model name="X1-Y1-Z2">
-    <pose>0.8 0.3 1 0 0 0</pose>
-    <include>
-      <uri>model://blocks.model/X1-Y1-Z2</uri>
-    </include>
-  </model>-->
-
-  <!-- YOLO detects it right -->
-  <model name="X1-Y2-Z1">
-    <pose>0.8 0 1 0 0 0</pose>
-    <include>
-      <uri>model://blocks.model/X1-Y2-Z1</uri>
-    </include>
-  </model>
-
-  <model name="X1-Y2-Z2-CHAMFER">
-    <pose>0.6 0.2 1 0 0 0</pose>
-    <include>
-      <uri>model://blocks.model/X1-Y2-Z2-CHAMFER</uri>
-    </include>
-  </model>
-
-  <!--<model name="X1-Y2-Z2-TWINFILLET">
-    <pose>0.4 0 1 0 0 0</pose>
-    <include>
-      <uri>model://blocks.model/X1-Y2-Z2-TWINFILLET</uri>
-    </include>
-  </model>-->
-  
-  <model name="X1-Y2-Z2">
-    <pose>0.7 -0.1 1 0 0 0</pose>
-    <include>
-      <uri>model://blocks.model/X1-Y2-Z2</uri>
-    </include>
-  </model>
-
-  <!--<model name="X1-Y3-Z2">
-    <pose>0.5 0.1 1 0 0 0</pose>
-    <include>
-      <uri>model://blocks.model/X1-Y3-Z2</uri>
-    </include>
-  </model>-->
-
-  <!--<model name="X1-Y3-Z2-FILLET">
-    <pose>0.5 0.1 1.1 0 0 0</pose>
-    <include>
-      <uri>model://blocks.model/X1-Y3-Z2-FILLET</uri>
-    </include>
-  </model>-->
-
-  <!--<model name="X1-Y4-Z2">
-    <pose>0.7 0.1 1 0 0 0</pose>
-    <include>
-      <uri>model://blocks.model/X1-Y4-Z2</uri>
-    </include>
-  </model>-->
-
-  <model name="X2-Y2-Z2-FILLET">
-    <pose>0.5 0.2 1 0 0 0</pose>
-    <include>
-      <uri>model://blocks.model/X2-Y2-Z2-FILLET</uri>
-    </include>
-  </model>
-
     <plugin name="x_linker" filename="libx_linker.so" />
+
+    <!-- ACTUAL WORLD STARTS HERE: -->
+
+    <model name="X1-Y2-Z2-CHAMFER">
+      <pose>0.6 0.2 1 0 0 0</pose>
+      <include>
+        <uri>model://blocks.model/X1-Y2-Z2-CHAMFER</uri>
+      </include>
+    </model>
+
+    <model name="X1-Y2-Z2">
+      <pose>0.7 -0.1 1 0 0 0</pose>
+      <include>
+        <uri>model://blocks.model/X1-Y2-Z2</uri>
+      </include>
+    </model>
+
+    <model name="X2-Y2-Z2-FILLET">
+      <pose>0.5 0.2 1 0 0 0</pose>
+      <include>
+        <uri>model://blocks.model/X2-Y2-Z2-FILLET</uri>
+      </include>
+    </model>
   </world>
 </sdf>
