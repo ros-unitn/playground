@@ -115,21 +115,21 @@ const bool working_position(ros::Rate &loop_rate, UR5 &ur5, const Eigen::VectorX
   return true;
 }
 
-bool objects_position(ros::Rate &loop_rate, UR5 &ur5, Gripper &gripper, Eigen::VectorXd qEs, Eigen::Vector3d &pos, std::string block_name) {
+bool objects_position(ros::Rate &loop_rate, UR5 &ur5, Gripper &gripper, Eigen::VectorXd qEs, Eigen::Vector3d &pos, std::string block_name, double block_rotation) {
 
   Eigen::Vector3d over_pos = pos + Eigen::Vector3d(0.0, 0.0, 0.2);
   std::cout << "pos: " << pos.transpose() << std::endl;
-  Eigen::Vector3d rot = (Eigen::Vector3d() << 0.0, -M_PI, 0.0).finished();
+  Eigen::Vector3d rot = (Eigen::Vector3d() << block_rotation, -M_PI, 0.0).finished();
   std::cout << "rot: " << rot.transpose() << std::endl;
   execute_motion(loop_rate, ur5, over_pos, rot, refresh_theta(), 1);
   execute_motion(loop_rate, ur5, pos, rot, refresh_theta(), 0.5);
 
-  // gripper.push(0.2);
+  gripper.push(0.2);
   gripper.attach(block_name, block_name + "::link");
 
   working_position(loop_rate, ur5, refresh_theta(), 2, true, block_name); // newTable
 
-  // gripper.push(0.0);
+  gripper.push(0.0);
   gripper.detach();
 
   return true;
@@ -155,14 +155,17 @@ int main(int argc, char *argv[]) {
   // test_position(loop_rate, ur5, refresh_theta(),1);
   // working_position(loop_rate, ur5, refresh_theta(), 2, true, argv);
 
+  std::cout << "Found " << srv.response.list.size() << " blocks" << std::endl;
+
   for (x_msgs::Block b : srv.response.list) {
     geometry_msgs::Point curr = b.obj;
     std::string block_name = b.label;
-    Eigen::Vector3d pos = (Eigen::Vector3d() << curr.x, curr.y, 0.175).finished();
-    objects_position(loop_rate, ur5, gripper, refresh_theta(), pos, block_name);
+    double block_rotation = b.angle;
+    Eigen::Vector3d pos = (Eigen::Vector3d() << curr.x, curr.y, curr.z).finished();
+    objects_position(loop_rate, ur5, gripper, refresh_theta(), pos, block_name, block_rotation);
   }
 
-  // working_position(loop_rate, ur5, refresh_theta(), 2, false, "");
+  working_position(loop_rate, ur5, refresh_theta(), 2, false, "");
 
   std::cout << "Success!" << std::endl;
 
