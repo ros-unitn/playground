@@ -43,8 +43,3 @@ add_dependencies(${PROJECT_NAME}_node x_linker_generate_messages_cpp)
 target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
 )
-
-catkin_install_python(PROGRAMS
-  scripts/send_gripper.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)

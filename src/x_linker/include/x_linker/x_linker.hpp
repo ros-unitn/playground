@@ -6,6 +6,9 @@
 #include "x_linker/Link.h"
 #include "x_linker/LinkRequest.h"
 #include "x_linker/LinkResponse.h"
+#include "x_linker/LinkBelow.h"
+#include "x_linker/LinkBelowRequest.h"
+#include "x_linker/LinkBelowResponse.h"
 
 namespace gazebo {
 
@@ -32,6 +35,8 @@ public:
   bool detach(std::string model1, std::string link1,
               std::string model2, std::string link2);
 
+  bool attach_below(std::string model1, std::string link1, FixedJoint &joint);
+
   bool get_joint(std::string model1, std::string link1,
                 std::string model2, std::string link2, FixedJoint &joint);
 
@@ -40,11 +45,14 @@ protected:
                        x_linker::Link::Response &res);
   bool detach_callback(x_linker::Link::Request &req,
                        x_linker::Link::Response &res);
+  bool attach_below_callback(x_linker::LinkBelow::Request &req,
+                       x_linker::LinkBelow::Response &res);
 
 private:
   ros::NodeHandle m_n;
   ros::ServiceServer m_attach_server;
   ros::ServiceServer m_detach_server;
+  ros::ServiceServer m_attach_below_server;
   std::vector<FixedJoint> m_joints;
   physics::PhysicsEnginePtr m_physics;
   physics::WorldPtr m_world;

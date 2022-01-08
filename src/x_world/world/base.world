@@ -1,0 +1,87 @@
+<?xml version="1.0"?>
+
+<!-- Copyright (C) 2021 Filippo Rossi
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
+
+<sdf version="1.6" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <world name="task_1">
+    <gui>
+      <camera name="user_camera">
+        <pose>1.4 -2.3 1.4 0.0 0.25 1.9</pose>
+      </camera>
+    </gui>
+
+    <gravity>0 0 -9.81</gravity>
+
+    <physics name="default_physics" default="0" type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+
+    <scene>
+      <ambient>0.4 0.4 0.4 1</ambient>
+      <background>0.7 0.7 0.7 1</background>
+      <shadows>0</shadows>
+    </scene>
+
+    <!-- Light Source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- A ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+      <pose>0 0 0 0 0 0</pose>
+    </include>
+
+    <!-- Robot base -->
+    <model name="kinect">
+      <include>
+        <uri>model://kinect.model</uri>
+        <pose>0.75 0 1.363 0 1.57 0</pose>
+      </include>
+    </model>
+
+    <!-- Robot base -->
+    <model name="ur5_base">
+      <include>
+        <uri>model://ur5_base.model</uri>
+        <pose>0 0 0 0 0 0</pose>
+      </include>
+    </model>
+
+    <!-- Table -->
+    <model name="table">
+      <static>true</static>
+      <include>
+        <uri>model://table.model</uri>
+        <pose>0.75 0 0 0 0 0</pose>
+      </include>
+    </model>
+
+    <!-- Table Drop -->
+    <model name="table_drop">
+      <static>true</static>
+      <include>
+        <uri>model://table_drop.model</uri>
+        <pose>0 0.75 0 0 0 1.57</pose>
+      </include>
+    </model>
+
+    <plugin name="x_linker" filename="libx_linker.so" />
+  </world>
+</sdf>

@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+
+<!-- Copyright (C) 2021 Filippo Rossi
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
+
+<launch>
+  <arg name="paused" default="true" />
+  <arg name="gui" default="true" />
+  <arg name="world" default="base.world" />
+  <arg name="urdf_xacro" default="$(find x_robot)/urdf/x_robot.urdf.xacro" />
+
+  <!-- startup simulated world -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" default="$(find x_world)/world/1.world" />
+    <arg name="paused" value="$(arg paused)" />
+    <arg name="gui" value="$(arg gui)" />
+    <arg name="verbose" value="true" />
+  </include>
+
+  <!-- launch the gazebo simulator and spawn the robot -->
+  <include file="$(find x_robot)/launch/robot.launch">
+    <arg name="urdf_xacro" value="$(arg urdf_xacro)" />
+  </include>
+</launch>
