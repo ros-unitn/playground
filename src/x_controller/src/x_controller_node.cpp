@@ -31,23 +31,21 @@
 #include "x_msgs/Block.h"
 #include "x_msgs/Blocks.h"
 
-std::map<std::string, Eigen::Vector3d> drop_points;
+std::map<std::string, Eigen::Vector3d> drop_points = {
+  {"X1-Y1-Z2", Eigen::Vector3d(-0.3, -0.45, 0.3)},
+  {"X1-Y2-Z2", Eigen::Vector3d(-0.12, -0.45, 0.3)},
+  {"X1-Y3-Z2", Eigen::Vector3d(0.09, -0.45, 0.3)},
+  {"X1-Y4-Z2", Eigen::Vector3d(0.3, -0.45, 0.3)},
 
-void initialize_map() {
-  drop_points["X1-Y1-Z2"] = Eigen::Vector3d(-0.3, -0.45, 0.3);
-  drop_points["X1-Y2-Z2"] = Eigen::Vector3d(-0.12, -0.45, 0.3);
-  drop_points["X1-Y3-Z2"] = Eigen::Vector3d(0.09, -0.45, 0.3);
-  drop_points["X1-Y4-Z2"] = Eigen::Vector3d(0.3, -0.45, 0.3);
+  {"X1-Y2-Z1", Eigen::Vector3d(-0.3, -0.61, 0.3)},
+  {"X1-Y2-Z2-TWINFILLET", Eigen::Vector3d(-0.12, -0.61, 0.3)},
+  {"X1-Y3-Z2-FILLET", Eigen::Vector3d(0.09, -0.61, 0.3)},
+  {"X2-Y2-Z2", Eigen::Vector3d(0.3, -0.61, 0.3)},
 
-  drop_points["X1-Y2-Z1"] = Eigen::Vector3d(-0.3, -0.61, 0.3);
-  drop_points["X1-Y2-Z2-TWINFILLET"] = Eigen::Vector3d(-0.12, -0.61, 0.3);
-  drop_points["X1-Y3-Z2-FILLET"] = Eigen::Vector3d(0.09, -0.61, 0.3);
-  drop_points["X2-Y2-Z2"] = Eigen::Vector3d(0.3, -0.61, 0.3);
-
-  drop_points["X1-Y4-Z1"] = Eigen::Vector3d(-0.3, -0.79, 0.3);
-  drop_points["X1-Y2-Z2-CHAMFER"] = Eigen::Vector3d(-0.12, -0.79, 0.3);
-  drop_points["X2-Y2-Z2-FILLET"] = Eigen::Vector3d(0.3, -0.79, 0.3);
-}
+  {"X1-Y4-Z1", Eigen::Vector3d(-0.3, -0.79, 0.3)},
+  {"X1-Y2-Z2-CHAMFER", Eigen::Vector3d(-0.12, -0.79, 0.3)},
+  {"X2-Y2-Z2-FILLET", Eigen::Vector3d(0.3, -0.79, 0.3)},
+};
 
 bool execute_motion(ros::Rate &loop_rate, UR5 &ur5, const Eigen::Vector3d &pos, const Eigen::Vector3d &rot, const Eigen::VectorXd &qEs, double maxT) {
   Eigen::MatrixXd dest_angles = Kinematics::ik(Kinematics::create_homogeneous_matrix(pos, Kinematics::eul2rotm(rot)));
@@ -93,7 +91,6 @@ Eigen::VectorXd refresh_theta() {
 }
 
 const bool working_position(ros::Rate &loop_rate, UR5 &ur5, const Eigen::VectorXd &qEs, double maxT, bool newTable, std::string block_name) {
-
   Eigen::Vector3d pos;
   Eigen::Vector3d rot;
 
@@ -141,8 +138,6 @@ int main(int argc, char *argv[]) {
   UR5 ur5(n);
   Gripper gripper(n);
   ros::Rate loop_rate(100);
-
-  initialize_map();
 
   ros::ServiceClient client = n.serviceClient<x_msgs::Blocks>("blocks");
   x_msgs::Blocks srv;

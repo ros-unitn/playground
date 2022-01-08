@@ -5,7 +5,6 @@ from pathlib import Path
 
 from PIL import Image
 
-import cv2
 import torch
 import numpy as np
 
@@ -25,9 +24,8 @@ if __name__ == "__main__":
         yolo_repo_path, "custom", path=yolo_weights_path, source="local"
     )  # local repo
 
-    with Image.open("/home/rossi/dev/uni/playground/test_2.png") as f:
+    with Image.open("test_2.png") as f:
         ros_image = np.asarray(f)
 
-        for _ in range(3):
-            res = model(ros_image)
+        res = model(ros_image)
         res.show()
