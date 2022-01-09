@@ -112,9 +112,7 @@ const Eigen::MatrixXd Kinematics::p2p(const Eigen::VectorXd &qEs, const Eigen::V
   for (double t = minT; t < maxT; t += step, rowIndex++) {
     for (int i = 0; i < qEs.size(); i++) {
       Th(rowIndex, i) = A(i, 0) + A(i, 1) * t + A(i, 2) * t * t + A(i, 3) * t * t * t + A(i, 4) * t * t * t * t + A(i, 5) * t * t * t * t * t;
-      // std::cout << "Th(" << rowIndex << ", " << i << ") = " << Th(rowIndex, i) << " ";
     }
-    // std::cout << std::endl;
   }
 
   return Th;
