@@ -4,4 +4,4 @@ scipy>=1.7
 autopep8>=1.6
 torch>=1.8
 
--r src/x_yolo/yolov5/requirements.txt
+-r src/x_vision/yolov5/requirements.txt

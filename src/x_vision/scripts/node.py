@@ -215,7 +215,7 @@ if __name__ == "__main__":
         yolo_repo_path, "custom", path=yolo_weights_path, source="local"
     )  # local repo
 
-    rospy.init_node("x_yolo_node")
+    rospy.init_node("x_vision_node")
     a = rospy.topics.Subscriber("/camera/color/image_raw", Image, raw_color_callback)
     b = rospy.topics.Subscriber("/camera/depth/image_raw", Image, raw_depth_callback)
     s = rospy.Service("blocks", Blocks, srv_callback)

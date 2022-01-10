@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>x_yolo</name>
+  <name>x_vision</name>
   <version>0.0.0</version>
-  <description>The x_yolo package</description>
+  <description>The x_vision package</description>
   <maintainer email="filipporossi@hey.com">Filippo Rossi</maintainer>
 
   <license>GPLv3</license>

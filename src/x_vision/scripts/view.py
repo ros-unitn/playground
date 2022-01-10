@@ -41,7 +41,7 @@ if __name__ == "__main__":
         yolo_repo_path, "custom", path=yolo_weights_path, source="local"
     )  # local repo
 
-    rospy.init_node("x_yolo_view")
+    rospy.init_node("x_vision_view")
     a = rospy.topics.Subscriber("/camera/color/image_raw", Image, raw_color_callback)
     while not rospy.core.is_shutdown():
         if image_lock.acquire(blocking=False):
