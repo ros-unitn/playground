@@ -78,7 +78,7 @@ bool execute_motion(ros::Rate &rate, UR5 &ur5, const Eigen::Vector3d &pos, const
 Eigen::VectorXd refresh_theta() {
   sensor_msgs::JointStateConstPtr msg = ros::topic::waitForMessage<sensor_msgs::JointState>("/joint_states");
 
-  if (msg != nullptr) {
+  if (msg == nullptr) {
     throw std::runtime_error("Joint state message is null.");
   }
 
