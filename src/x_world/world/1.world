@@ -86,22 +86,78 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
 
     <!-- ACTUAL WORLD STARTS HERE: -->
 
-    <model name="X1-Y2-Z2-CHAMFER">
-      <pose>0.6 0.2 1 0 0 0</pose>
+    <model name="X1-Y1-Z2">
+      <pose>0.45 0.2 1 0 0 0</pose>
       <include>
-        <uri>model://blocks.model/X1-Y2-Z2-CHAMFER</uri>
+        <uri>model://blocks.model/X1-Y1-Z2</uri>
+      </include>
+    </model>
+
+    <model name="X1-Y2-Z1">
+      <pose>0.45 0.0 1 0 0 0</pose>
+      <include>
+        <uri>model://blocks.model/X1-Y2-Z1</uri>
       </include>
     </model>
 
     <model name="X1-Y2-Z2">
-      <pose>0.7 -0.1 1 0 0 0</pose>
+      <pose>0.45 -0.2 1 0 0 0</pose>
       <include>
         <uri>model://blocks.model/X1-Y2-Z2</uri>
       </include>
     </model>
 
+    <model name="X1-Y2-Z2-CHAMFER">
+      <pose>0.55 0.2 1 0 0 0</pose>
+      <include>
+        <uri>model://blocks.model/X1-Y2-Z2-CHAMFER</uri>
+      </include>
+    </model>
+
+    <model name="X1-Y2-Z2-TWINFILLET">
+      <pose>0.55 0.0 1 0 0 0</pose>
+      <include>
+        <uri>model://blocks.model/X1-Y2-Z2-TWINFILLET</uri>
+      </include>
+    </model>
+
+    <model name="X1-Y3-Z2">
+      <pose>0.55 -0.2 1 0 0 0</pose>
+      <include>
+        <uri>model://blocks.model/X1-Y3-Z2</uri>
+      </include>
+    </model>
+
+    <model name="X1-Y3-Z2-FILLET">
+      <pose>0.65 0.2 1 0 0 0</pose>
+      <include>
+        <uri>model://blocks.model/X1-Y3-Z2-FILLET</uri>
+      </include>
+    </model>
+
+    <model name="X1-Y4-Z1">
+      <pose>0.65 0.0 1 0 0 0</pose>
+      <include>
+        <uri>model://blocks.model/X1-Y4-Z1</uri>
+      </include>
+    </model>
+
+    <model name="X1-Y4-Z2">
+      <pose>0.65 -0.2 1 0 0 0</pose>
+      <include>
+        <uri>model://blocks.model/X1-Y4-Z2</uri>
+      </include>
+    </model>
+
+    <model name="X2-Y2-Z2">
+      <pose>0.75 0.1 1 0 0 0</pose>
+      <include>
+        <uri>model://blocks.model/X2-Y2-Z2</uri>
+      </include>
+    </model>
+
     <model name="X2-Y2-Z2-FILLET">
-      <pose>0.5 0.2 1 0 0 0</pose>
+      <pose>0.75 -0.1 1 0 0 0</pose>
       <include>
         <uri>model://blocks.model/X2-Y2-Z2-FILLET</uri>
       </include>
