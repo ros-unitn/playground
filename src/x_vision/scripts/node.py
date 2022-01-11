@@ -12,8 +12,8 @@ import imutils
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Point
 from cv_bridge import CvBridge
-from imutils import perspective
-from imutils import contours
+from imutils import perspective as imperspective
+from imutils import contours as imcontours
 
 from x_msgs.msg import Block
 from x_msgs.srv import Blocks, BlocksResponse
@@ -64,6 +64,7 @@ raw_depth_lock = Lock()
 raw_color = None
 raw_depth = None
 
+
 def midpoint(ptA, ptB):
     return ((ptA[0] + ptB[0]) * 0.5, (ptA[1] + ptB[1]) * 0.5)
 
@@ -77,6 +78,8 @@ def detection(raw_color, raw_depth):
 
     color = bridge.imgmsg_to_cv2(raw_color, "bgr8")
     depth = bridge.imgmsg_to_cv2(raw_depth, "32FC1")
+
+    depth = cv2.normalize(depth, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
 
     gray = cv2.cvtColor(color, cv2.COLOR_BGR2GRAY)
     gray = cv2.GaussianBlur(gray, (5, 5), 0)
@@ -108,7 +111,7 @@ def detection(raw_color, raw_depth):
             ):
                 if obj["label"] == obj2["label"]:
                     duplicate.append(obj2)
-                else: # two different classifications
+                else:  # two different classifications
                     less_confidence = obj
                     if obj2["confidence"] < obj["confidence"]:
                         less_confidence = obj2
@@ -122,27 +125,73 @@ def detection(raw_color, raw_depth):
 
     message_frame = BlocksResponse()
 
-    for obj in results:
+    for i, obj in enumerate(results):
         y1 = int(obj["y1"])
         y2 = int(obj["y2"])
         x1 = int(obj["x1"])
         x2 = int(obj["x2"])
 
-        bbox_img = gray[y1:y2, x1:x2]
-        edged = cv2.Canny(bbox_img, 50, 100)
+        bbox_depth = cv2.blur(depth[y1:y2, x1:x2], (1, 1))
+        bbox_color = cv2.blur(color[y1:y2, x1:x2], (1, 1))
+
+        ## Circle detection
+
+        up_thresh = bbox_depth.min() + 3
+        up_threshold = cv2.threshold(bbox_depth, up_thresh, 255, cv2.THRESH_BINARY)
+        up_img = cv2.blur(up_threshold[1], (4, 4))
+        up_circles = cv2.HoughCircles(
+            up_img,
+            cv2.HOUGH_GRADIENT,
+            1,
+            20,
+            param1=50,
+            param2=30,
+            minRadius=0,
+            maxRadius=0,
+        )
+
+        ## Find contours
+        
+        edged = cv2.Canny(bbox_depth, 0, 0)
         edged = cv2.dilate(edged, None, iterations=1)
         edged = cv2.erode(edged, None, iterations=1)
 
-        cnts = cv2.findContours(
-            edged.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
-        )
-        cnts = imutils.grab_contours(cnts)
+        contours = cv2.findContours(edged, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours = imutils.grab_contours(contours)
 
-        (cnts, _) = contours.sort_contours(cnts)
-        cnts = list(filter(lambda x: cv2.contourArea(x) >= 100, cnts))
-        assert len(cnts) >= 1
+        ## Sides and down
 
-        c = cnts[0]
+        (contours, _) = imcontours.sort_contours(contours)
+
+        for contour in contours:
+            cv2.drawContours(bbox_color, [contour], -1, (0, 255, 0), 2)
+            approx = cv2.approxPolyDP(
+                contour, 0.05 * cv2.arcLength(contour, True), True)
+        
+            # Finding center point of shape
+            M = cv2.moments(contour)
+            if M['m00'] != 0.0:
+                x = int(M['m10'] / M['m00'])
+                y = int(M['m01'] / M['m00'])
+                cv2.putText(bbox_color, str(len(approx)), (x, y),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
+
+        ## Debug
+
+        if up_circles is not None:
+            circles = np.uint16(np.around(up_circles))
+            for pt in circles[0, :]:
+                a, block, r = pt[0], pt[1], pt[2]
+                cv2.circle(bbox_color, (a, block), r, (255, 0, 0), 2)
+
+        cv2.imshow("circle", bbox_color)
+        print(len(contours))
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+        ## Angle
+        assert len(contours) >= 1
+        c = contours[0]
 
         box = cv2.minAreaRect(c)
         angle = box[2]
@@ -156,15 +205,13 @@ def detection(raw_color, raw_depth):
         box = cv2.cv.BoxPoints(box) if imutils.is_cv2() else cv2.boxPoints(box)
         box = np.array(box, dtype="int")
 
-        box = perspective.order_points(box)
+        box = imperspective.order_points(box)
 
         (tl, _, br, _) = box
 
         (center_x, center_y) = midpoint(tl, br)
         center_x = center_x + obj["x1"]
         center_y = center_y + obj["y1"]
-
-        cv2.circle(color, (int(center_x), int(center_y)), 5, (0, 0, 255), -1)
 
         x_coord = y_min + (y_max - y_min) * center_y / 1024
         y_coord = x_min + (x_max - x_min) * center_x / 1024
@@ -173,15 +220,15 @@ def detection(raw_color, raw_depth):
         object_p = (object_depth - table_depth) / (0 - table_depth)
 
         z_coord = table_gazebo + (camera_gazebo - table_gazebo) * object_p
-        
-        p = Point(x_coord, y_coord, z_coord)
-        label = obj["label"]
-        b = Block()
-        b.obj = p
-        b.angle = np.radians(angle)
-        b.label = label
 
-        message_frame.list.append(b)
+        point = Point(x_coord, y_coord, z_coord)
+        label = obj["label"]
+        block = Block()
+        block.obj = point
+        block.angle = np.radians(angle)
+        block.label = label
+
+        message_frame.list.append(block)
 
     print(message_frame)
     return message_frame
@@ -192,12 +239,14 @@ def raw_color_callback(img: Image):
         global raw_color
         raw_color = img
         raw_color_lock.release()
-    
+
+
 def raw_depth_callback(img: Image):
     if raw_depth_lock.acquire(blocking=False):
         global raw_depth
         raw_depth = img
         raw_depth_lock.release()
+
 
 def srv_callback(_):
     global raw_color, raw_depth
@@ -218,5 +267,7 @@ if __name__ == "__main__":
     rospy.init_node("x_vision_node")
     a = rospy.topics.Subscriber("/camera/color/image_raw", Image, raw_color_callback)
     b = rospy.topics.Subscriber("/camera/depth/image_raw", Image, raw_depth_callback)
-    s = rospy.Service("blocks", Blocks, srv_callback)
-    rospy.spin()
+    rospy.rostime.wallsleep(2)
+    srv_callback(1)
+    # s = rospy.Service("blocks", Blocks, srv_callback)
+    # rospy.spin()

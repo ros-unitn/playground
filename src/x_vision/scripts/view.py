@@ -25,14 +25,15 @@ image = None
 if not yolo_repo_path in sys.path:
     sys.path.append(str(yolo_repo_path))
 
+
 def raw_color_callback(img: Image):
     global image
     color = bridge.imgmsg_to_cv2(img, "bgr8")
     res = model(color)
     res.render()
-    if image_lock.acquire(blocking=False):
-        image = res.imgs[0][:, :, :]
-        image_lock.release()
+    image = res.imgs[0][:, :, :]
+    cv2.imshow("view", image)
+    cv2.waitKey(1)
 
 
 if __name__ == "__main__":
@@ -43,9 +44,4 @@ if __name__ == "__main__":
 
     rospy.init_node("x_vision_view")
     a = rospy.topics.Subscriber("/camera/color/image_raw", Image, raw_color_callback)
-    while not rospy.core.is_shutdown():
-        if image_lock.acquire(blocking=False):
-            if image is not None:
-                cv2.imshow("view", image)
-            image_lock.release()
-            cv2.waitKey(1)
+    rospy.spin()

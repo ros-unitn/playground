@@ -1,4 +1,5 @@
 {
+  "python.formatting.provider": "black",
   "cmake.sourceDirectory": "${workspaceFolder}/src",
   "cmake.generator": "Unix Makefiles",
   "files.associations": {
