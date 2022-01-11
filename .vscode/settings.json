@@ -103,7 +103,8 @@
     "semaphore": "cpp",
     "stop_token": "cpp",
     "valarray": "cpp",
-    "core": "cpp"
+    "core": "cpp",
+    "source_location": "cpp"
   },
   "python.autoComplete.extraPaths": [
     "/usr/local/Caskroom/miniforge/base/envs/robostackenv/lib/python3.8/site-packages",

@@ -30,28 +30,20 @@ const bool Kinematics::check_row(const Eigen::VectorXd &vec) {
 const Eigen::VectorXd Kinematics::best_angles(const Eigen::VectorXd &actual, const Eigen::MatrixXd &possible) {
 
   std::vector<std::pair<double, short>> diffs;
-  std::vector<short> validRows;
+
   for (int i = 0; i < possible.rows(); i++) {
+    double diff = 0;
     if (check_row(possible.row(i).transpose())) {
-      validRows.push_back(i);
+      for (int j = 0; j < possible.cols(); j++) {
+        diff += abs(possible.row(i).transpose()(j) - actual(j));
+      }
+      diffs.push_back(std::make_pair(diff, i));
     }
   }
 
-  for (int i = 0; i < possible.cols() && validRows.size() != 1; i++) {
-    for (int j = 0; j < possible.rows(); j++) {
-      if (std::find(validRows.begin(), validRows.end(), j) != validRows.end()) {
-        diffs.push_back(std::make_pair(std::abs(actual(i) - possible(j, i)), j));
-      }
-    }
-    std::sort(diffs.begin(), diffs.end());
-    validRows.resize(0);
-    validRows.push_back(diffs[0].second);
-    for (int k = 1; k < diffs.size() && diffs[k].first == diffs[0].first; k++) {
-      validRows.push_back(diffs[k].second);
-    }
-    diffs.resize(0);
-  }
-  return possible.row(validRows[0]).transpose();
+  std::sort(diffs.begin(), diffs.end());
+
+  return possible.row(diffs[0].second).transpose();
 }
 
 const Eigen::Matrix3d Kinematics::eul2rotm(const Eigen::Vector3d &eul) {

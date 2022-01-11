@@ -32,24 +32,27 @@
 #include "x_msgs/Blocks.h"
 
 std::map<std::string, const Eigen::Vector3d> drop_points = {
-  {"X1-Y1-Z2", Eigen::Vector3d(-0.3, -0.45, 0.3)},
-  {"X1-Y2-Z2", Eigen::Vector3d(-0.12, -0.45, 0.3)},
-  {"X1-Y3-Z2", Eigen::Vector3d(0.09, -0.45, 0.3)},
-  {"X1-Y4-Z2", Eigen::Vector3d(0.3, -0.45, 0.3)},
+    {"X1-Y1-Z2", Eigen::Vector3d(-0.3, -0.45, 0.25)},
+    {"X1-Y2-Z2", Eigen::Vector3d(-0.12, -0.45, 0.25)},
+    {"X1-Y3-Z2", Eigen::Vector3d(0.09, -0.45, 0.25)},
+    {"X1-Y4-Z2", Eigen::Vector3d(0.3, -0.45, 0.25)},
 
-  {"X1-Y2-Z1", Eigen::Vector3d(-0.3, -0.61, 0.3)},
-  {"X1-Y2-Z2-TWINFILLET", Eigen::Vector3d(-0.12, -0.61, 0.3)},
-  {"X1-Y3-Z2-FILLET", Eigen::Vector3d(0.09, -0.61, 0.3)},
-  {"X2-Y2-Z2", Eigen::Vector3d(0.3, -0.61, 0.3)},
+    {"X1-Y2-Z1", Eigen::Vector3d(-0.3, -0.61, 0.25)},
+    {"X1-Y2-Z2-TWINFILLET", Eigen::Vector3d(-0.12, -0.61, 0.25)},
+    {"X1-Y3-Z2-FILLET", Eigen::Vector3d(0.09, -0.61, 0.25)},
+    {"X2-Y2-Z2", Eigen::Vector3d(0.3, -0.61, 0.25)},
 
-  {"X1-Y4-Z1", Eigen::Vector3d(-0.3, -0.79, 0.3)},
-  {"X1-Y2-Z2-CHAMFER", Eigen::Vector3d(-0.12, -0.79, 0.3)},
-  {"X2-Y2-Z2-FILLET", Eigen::Vector3d(0.3, -0.79, 0.3)},
+    {"X1-Y4-Z1", Eigen::Vector3d(-0.3, -0.79, 0.25)},
+    {"X1-Y2-Z2-CHAMFER", Eigen::Vector3d(-0.12, -0.79, 0.25)},
+    {"X2-Y2-Z2-FILLET", Eigen::Vector3d(0.3, -0.79, 0.25)},
 };
 
-bool execute_motion(ros::Rate &rate, UR5 &ur5, const Eigen::Vector3d &pos, const Eigen::Vector3d &rot, const Eigen::VectorXd &qEs, double max_t) {
-  Eigen::MatrixXd dest_angles = Kinematics::ik(Kinematics::create_homogeneous_matrix(pos, Kinematics::eul2rotm(rot)));
-  Eigen::VectorXd qEf = Kinematics::best_angles(qEs, dest_angles);
+bool execute_motion(ros::Rate &rate, UR5 &ur5, const Eigen::Vector3d &pos, const Eigen::Vector3d &rot, const Eigen::VectorXd &qEs, double max_t, Eigen::VectorXd qEf = Eigen::VectorXd::Zero(6)) {
+
+  if (qEf == Eigen::VectorXd::Zero(6)) {
+    Eigen::MatrixXd dest_angles = Kinematics::ik(Kinematics::create_homogeneous_matrix(pos, Kinematics::eul2rotm(rot)));
+    qEf = Kinematics::best_angles(qEs, dest_angles);
+  }
 
   Eigen::MatrixXd points = Kinematics::p2p(qEs, qEf, max_t);
 
@@ -95,18 +98,9 @@ Eigen::VectorXd refresh_theta() {
   return theta;
 }
 
-const bool working_position(ros::Rate &rate, UR5 &ur5, const Eigen::VectorXd &qEs, double max_t, bool new_table, std::string block_name) {
-  Eigen::Vector3d pos;
-  Eigen::Vector3d rot;
-
-  if (new_table) {
-    pos = drop_points[block_name];
-    rot << 0.0, -M_PI, 0.0;
-
-  } else {
-    pos << -0.75, 0.0, 0.3;
-    rot << -M_PI_2, -M_PI, 0.0;
-  }
+bool working_position(ros::Rate &rate, UR5 &ur5, const Eigen::VectorXd &qEs, const Eigen::Vector3d &rot, double max_t, std::string block_name) {
+  
+  Eigen::Vector3d pos = drop_points[block_name];  
 
   ROS_INFO_STREAM("pos: " << pos.transpose());
   ROS_INFO_STREAM("rot: " << rot.transpose());
@@ -117,7 +111,7 @@ const bool working_position(ros::Rate &rate, UR5 &ur5, const Eigen::VectorXd &qE
 }
 
 bool objects_position(ros::Rate &rate, UR5 &ur5, Gripper &gripper, Eigen::VectorXd qEs, Eigen::Vector3d &pos, std::string block_name, double block_rotation) {
-  Eigen::Vector3d over_pos = pos + Eigen::Vector3d(0.0, 0.0, 0.2);
+  Eigen::Vector3d over_pos = pos + Eigen::Vector3d(0.0, 0.0, 0.1);
   Eigen::Vector3d rot = (Eigen::Vector3d() << block_rotation, -M_PI, 0.0).finished();
   ROS_INFO_STREAM("pos: " << pos.transpose());
   ROS_INFO_STREAM("rot: " << rot.transpose());
@@ -128,7 +122,9 @@ bool objects_position(ros::Rate &rate, UR5 &ur5, Gripper &gripper, Eigen::Vector
   gripper.push(0.2);
   gripper.attach_below();
 
-  working_position(rate, ur5, refresh_theta(), 2, true, block_name); // new_table
+  execute_motion(rate, ur5, over_pos, rot, refresh_theta(), 0.5);
+
+  working_position(rate, ur5, refresh_theta(), rot, 1, block_name); // new_table
 
   gripper.push(0.0);
   gripper.detach();
@@ -136,18 +132,25 @@ bool objects_position(ros::Rate &rate, UR5 &ur5, Gripper &gripper, Eigen::Vector
   return true;
 }
 
+bool original_position(ros::Rate &rate, UR5 &ur5, Eigen::VectorXd qEs, Eigen::VectorXd &original) {
+
+  execute_motion(rate, ur5, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(), refresh_theta(), 1, original);
+
+  return true;
+}
+
 int main(int argc, char *argv[]) {
   ros::init(argc, argv, "x_controller");
   ros::NodeHandle n;
-  
+
   UR5 ur5(n);
   Gripper gripper(n);
-  
+
   ros::Rate rate(100);
 
   ros::ServiceClient client = n.serviceClient<x_msgs::Blocks>("blocks");
   x_msgs::Blocks srv;
-  
+
   if (client.call(srv)) {
     ROS_INFO_STREAM("Found " << srv.response.list.size() << " blocks");
   } else {
@@ -155,18 +158,17 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  // test_position(rate, ur5, refresh_theta(),1);
-  // working_position(rate, ur5, refresh_theta(), 2, true, argv);
+  Eigen::VectorXd original = refresh_theta();
 
   for (x_msgs::Block b : srv.response.list) {
     geometry_msgs::Point curr = b.obj;
     std::string block_name = b.label;
-    double block_rotation = b.angle;
+    double block_rotation = b.angle; //TODO: fix rotation for some blocks
     Eigen::Vector3d pos = (Eigen::Vector3d() << curr.x, curr.y, curr.z).finished();
     objects_position(rate, ur5, gripper, refresh_theta(), pos, block_name, block_rotation);
   }
 
-  working_position(rate, ur5, refresh_theta(), 2, false, "");
+  original_position(rate, ur5, refresh_theta(), original);
 
   ROS_INFO_STREAM("Success!");
 
