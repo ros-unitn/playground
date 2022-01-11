@@ -16,21 +16,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
 
 <launch>
-  <arg name="paused" default="true" />
-  <arg name="gui" default="true" />
-  <arg name="world" default="base.world" />
-  <arg name="urdf_xacro" default="$(find x_robot)/urdf/x_robot.urdf.xacro" />
-
-  <!-- startup simulated world -->
-  <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" default="$(arg world)" />
-    <arg name="paused" value="$(arg paused)" />
-    <arg name="gui" value="$(arg gui)" />
-    <arg name="verbose" value="true" />
-  </include>
+  <arg name="world" default="$(find x_world)/world/same.world" />
 
   <!-- launch the gazebo simulator and spawn the robot -->
-  <include file="$(find x_robot)/launch/robot.launch">
-    <arg name="urdf_xacro" value="$(arg urdf_xacro)" />
+  <include file="$(find x_world)/launch/gazebo.launch">
+    <arg name="world" value="$(arg world)" />
   </include>
 </launch>

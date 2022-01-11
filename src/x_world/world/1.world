@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
 
 <sdf version="1.6" xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <world name="task_1">
+  <world name="1">
     <gui>
       <camera name="user_camera">
         <pose>1.4 -2.3 1.4 0.0 0.25 1.9</pose>

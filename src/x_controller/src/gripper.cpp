@@ -1,18 +1,15 @@
 #include "x_controller/gripper.hpp"
 
 #include <x_linker/Link.h>
-#include <x_linker/LinkBelow.h>
 
 #define GRIPPER_SERVICE_ATTACH "/x_linker_node/attach"
 #define GRIPPER_SERVICE_DETACH "/x_linker_node/detach"
-#define GRIPPER_SERVICE_ATTACH_BELOW "/x_linker_node/attach_below"
 
 Gripper::Gripper(ros::NodeHandle &n) {
   m_client = new Gripper::Client(n, GRIPPER_TOPIC);
   m_client->waitForServer();
   m_attach_client = n.serviceClient<x_linker::Link>(GRIPPER_SERVICE_ATTACH);
   m_detach_client = n.serviceClient<x_linker::Link>(GRIPPER_SERVICE_DETACH);
-  m_attach_below_client = n.serviceClient<x_linker::LinkBelow>(GRIPPER_SERVICE_ATTACH_BELOW);
 }
 
 Gripper::~Gripper() {
@@ -57,30 +54,6 @@ bool Gripper::attach(const std::string &model, const std::string &link) {
   bool call = m_attach_client.call(srv);
   if (!call) {
     ROS_ERROR("attach service call failed");
-    return false;
-  }
-
-  m_attached = srv.response.ok;
-  m_attached_model = model;
-  m_attached_link = link;
-
-  return srv.response.ok;
-}
-
-bool Gripper::attach_below() {
-  if (m_attached) {
-    return false;
-  }
-  
-  m_attached = true;
-
-  x_linker::LinkBelow srv;
-  srv.request.model_name_1 = GRIPPER_MODEL;
-  srv.request.link_name_1 = GRIPPER_LINK;
-
-  bool call = m_attach_below_client.call(srv);
-  if (!call) {
-    ROS_ERROR("attach below service call failed");
     return false;
   }
 

@@ -6,47 +6,40 @@
 #include "x_linker/Link.h"
 #include "x_linker/LinkRequest.h"
 #include "x_linker/LinkResponse.h"
-#include "x_linker/LinkBelow.h"
-#include "x_linker/LinkBelowRequest.h"
-#include "x_linker/LinkBelowResponse.h"
 
 namespace gazebo {
 
 class LinkerPlugin : public WorldPlugin {
 public:
   struct FixedJoint {
-    std::string model1;
-    physics::ModelPtr m1;
-    std::string link1;
-    physics::LinkPtr l1;
-    std::string model2;
-    physics::ModelPtr m2;
-    std::string link2;
-    physics::LinkPtr l2;
+    std::string model_name_1;
+    physics::ModelPtr model_1;
+    std::string link_name_1;
+    physics::LinkPtr link_1;
+    std::string model_name_2;
+    physics::ModelPtr model_2;
+    std::string link_name_2;
+    physics::LinkPtr link_2;
     physics::JointPtr joint;
   };
 
   LinkerPlugin();
   void Load(physics::WorldPtr _world, sdf::ElementPtr);
 
-  bool attach(std::string model1, std::string link1,
-              std::string model2, std::string link2);
+  bool attach(std::string model_name_1, std::string link_name_1,
+              std::string model_name_2, std::string link_name_2, FixedJoint &fixed);
 
-  bool detach(std::string model1, std::string link1,
-              std::string model2, std::string link2);
+  bool detach(std::string model_name_1, std::string link_name_1,
+              std::string model_name_2, std::string link_name_2, FixedJoint &fixed);
 
-  bool attach_below(std::string model1, std::string link1, FixedJoint &joint);
-
-  bool get_joint(std::string model1, std::string link1,
-                std::string model2, std::string link2, FixedJoint &joint);
+  bool get_joint(std::string model_name_1, std::string link_name_1,
+                std::string model_name_2, std::string link_name_2, FixedJoint &fixed);
 
 protected:
   bool attach_callback(x_linker::Link::Request &req,
                        x_linker::Link::Response &res);
   bool detach_callback(x_linker::Link::Request &req,
                        x_linker::Link::Response &res);
-  bool attach_below_callback(x_linker::LinkBelow::Request &req,
-                       x_linker::LinkBelow::Response &res);
 
 private:
   ros::NodeHandle m_n;

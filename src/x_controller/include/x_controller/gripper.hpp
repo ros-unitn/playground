@@ -27,7 +27,7 @@
 #define GRIPPER_TOPIC "/gripper_controller/gripper_cmd"
 
 #define GRIPPER_MODEL "robot"
-#define GRIPPER_LINK "wrist_3_link"
+#define GRIPPER_LINK "tool0"
 
 class Gripper {
 public:
@@ -41,7 +41,6 @@ public:
   size_t remaining() const;
 
   bool attach(const std::string &model, const std::string &link);
-  bool attach_below();
   bool detach();
 
 protected:
@@ -55,6 +54,5 @@ private:
   std::string m_attached_link;
   ros::ServiceClient m_attach_client;
   ros::ServiceClient m_detach_client;
-  ros::ServiceClient m_attach_below_client;
   Client *m_client;
 };

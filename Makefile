@@ -52,7 +52,7 @@ models: $(home)/.gazebo/models/kinect.model \
 	$(home)/.gazebo/models/blocks.model
 
 run: 
-	roslaunch x_world 1.launch
+	roslaunch x_world same.launch
 
 clean:
 	rm -rf $(home)/.ros/*.$(lib_ext)

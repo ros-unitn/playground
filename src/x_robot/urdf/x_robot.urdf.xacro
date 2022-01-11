@@ -68,6 +68,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
   <!-- Gazebo FT sensor plugin -->
   <gazebo reference="wrist_3_joint">
     <provideFeedback>true</provideFeedback>
+    <disableFixedJointLumping>true</disableFixedJointLumping>
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo>
+  <gazebo reference="wrist_3_link-tool0_fixed_joint">
+    <disableFixedJointLumping>true</disableFixedJointLumping>
+    <preserveFixedJoint>true</preserveFixedJoint>
   </gazebo>
   <gazebo>
     <plugin name="ft_sensor_plugin" filename="libgazebo_ros_ft_sensor.so">
@@ -77,14 +83,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
       <jointName>wrist_3_joint</jointName>
     </plugin>
   </gazebo>
-
-
-  <model name="kinect">
-    <include>
-      <uri>model://kinect.model</uri>
-      <pose>0 0 2 0 0 0</pose>
-    </include>
-  </model>
 
   <!-- Gazebo grasping plugin -->
   <gazebo>

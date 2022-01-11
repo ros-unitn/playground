@@ -120,7 +120,7 @@ bool objects_position(ros::Rate &rate, UR5 &ur5, Gripper &gripper, Eigen::Vector
   execute_motion(rate, ur5, pos, rot, refresh_theta(), 0.5);
 
   gripper.push(0.2);
-  gripper.attach_below();
+  gripper.attach(block_name, block_name + "::link");
 
   execute_motion(rate, ur5, over_pos, rot, refresh_theta(), 0.5);
 
