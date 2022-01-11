@@ -79,10 +79,9 @@ def detection(raw_color, raw_depth):
     color = bridge.imgmsg_to_cv2(raw_color, "bgr8")
     depth = bridge.imgmsg_to_cv2(raw_depth, "32FC1")
 
-    depth = cv2.normalize(depth, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
-
-    gray = cv2.cvtColor(color, cv2.COLOR_BGR2GRAY)
-    gray = cv2.GaussianBlur(gray, (5, 5), 0)
+    normalized_depth = cv2.normalize(
+        depth, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U
+    )
 
     results = []
     for i, row in enumerate(res.xyxy[0]):
@@ -131,16 +130,21 @@ def detection(raw_color, raw_depth):
         x1 = int(obj["x1"])
         x2 = int(obj["x2"])
 
-        bbox_depth = cv2.blur(depth[y1:y2, x1:x2], (1, 1))
+        bbox_depth = cv2.blur(normalized_depth[y1:y2, x1:x2], (1, 1))
         bbox_color = cv2.blur(color[y1:y2, x1:x2], (1, 1))
+
+        surface = bbox_color.copy()
+
+        cv2.imwrite(f"test_depth_{i}.png", bbox_depth)
+        cv2.imwrite(f"test_color_{i}.png", bbox_color)
 
         ## Circle detection
 
-        up_thresh = bbox_depth.min() + 3
-        up_threshold = cv2.threshold(bbox_depth, up_thresh, 255, cv2.THRESH_BINARY)
-        up_img = cv2.blur(up_threshold[1], (4, 4))
-        up_circles = cv2.HoughCircles(
-            up_img,
+        top_thresh = bbox_depth.min() + 3
+        _, top_threshold = cv2.threshold(bbox_depth, top_thresh, 255, cv2.THRESH_BINARY)
+        top_img = cv2.blur(top_threshold, (4, 4))
+        top_circles = cv2.HoughCircles(
+            top_img,
             cv2.HOUGH_GRADIENT,
             1,
             20,
@@ -150,76 +154,62 @@ def detection(raw_color, raw_depth):
             maxRadius=0,
         )
 
-        ## Find contours
-        
-        edged = cv2.Canny(bbox_depth, 0, 0)
-        edged = cv2.dilate(edged, None, iterations=1)
-        edged = cv2.erode(edged, None, iterations=1)
+        ## Contours
+        edged_threshold = cv2.adaptiveThreshold(
+            bbox_depth, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 199, 10
+        )
+        edged_threshold = cv2.GaussianBlur(edged_threshold, (11, 11), 0)
+        edged_img = cv2.Canny(edged_threshold, 50, 100)
+        edged_img = cv2.dilate(edged_img, None, iterations=1)
+        edged_img = cv2.erode(edged_img, None, iterations=1)
 
-        contours = cv2.findContours(edged, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours = cv2.findContours(
+            edged_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+        )
         contours = imutils.grab_contours(contours)
 
-        ## Sides and down
-
+        ## Angle of the block
         (contours, _) = imcontours.sort_contours(contours)
+        contours = sorted(contours, key=lambda c: cv2.contourArea(c))
 
-        for contour in contours:
-            cv2.drawContours(bbox_color, [contour], -1, (0, 255, 0), 2)
-            approx = cv2.approxPolyDP(
-                contour, 0.05 * cv2.arcLength(contour, True), True)
-        
-            # Finding center point of shape
-            M = cv2.moments(contour)
-            if M['m00'] != 0.0:
-                x = int(M['m10'] / M['m00'])
-                y = int(M['m01'] / M['m00'])
-                cv2.putText(bbox_color, str(len(approx)), (x, y),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
-
-        ## Debug
-
-        if up_circles is not None:
-            circles = np.uint16(np.around(up_circles))
-            for pt in circles[0, :]:
-                a, block, r = pt[0], pt[1], pt[2]
-                cv2.circle(bbox_color, (a, block), r, (255, 0, 0), 2)
-
-        cv2.imshow("circle", bbox_color)
-        print(len(contours))
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-
-        ## Angle
         assert len(contours) >= 1
-        c = contours[0]
+        c = contours[-1]
 
-        box = cv2.minAreaRect(c)
-        angle = box[2]
-        width = box[1][0]
-        height = box[1][1]
+        min_area_rect = cv2.minAreaRect(c)
+        angle = min_area_rect[2]
+        width = min_area_rect[1][0]
+        height = min_area_rect[1][1]
         if width < height:
             angle = angle + 90
         else:
             angle = angle + 180
 
-        box = cv2.cv.BoxPoints(box) if imutils.is_cv2() else cv2.boxPoints(box)
+        box = (
+            cv2.cv.BoxPoints(min_area_rect)
+            if imutils.is_cv2()
+            else cv2.boxPoints(min_area_rect)
+        )
+
         box = np.array(box, dtype="int")
 
         box = imperspective.order_points(box)
 
         (tl, _, br, _) = box
 
-        (center_x, center_y) = midpoint(tl, br)
-        center_x = center_x + obj["x1"]
-        center_y = center_y + obj["y1"]
+        (center_x_relative, center_y_relative) = midpoint(tl, br)
+
+        center_x = center_x_relative + obj["x1"]
+        center_y = center_y_relative + obj["y1"]
 
         x_coord = y_min + (y_max - y_min) * center_y / 1024
         y_coord = x_min + (x_max - x_min) * center_x / 1024
 
         object_depth = depth[int(center_y), int(center_x)]
-        object_p = (object_depth - table_depth) / (0 - table_depth)
 
+        object_p = (object_depth - table_depth) / (0 - table_depth)
         z_coord = table_gazebo + (camera_gazebo - table_gazebo) * object_p
+
+        ## Conclusions
 
         point = Point(x_coord, y_coord, z_coord)
         label = obj["label"]
@@ -229,6 +219,37 @@ def detection(raw_color, raw_depth):
         block.label = label
 
         message_frame.list.append(block)
+
+        ## Debug
+
+        # cv2.drawContours(
+        #     surface, [np.int0(cv2.boxPoints(min_area_rect))], 0, (0, 0, 255), -1
+        # )
+
+        # for contour in contours:
+        #     approx = cv2.approxPolyDP(
+        #         contour, 0.01 * cv2.arcLength(contour, True), True
+        #     )
+        #     cv2.drawContours(surface, [approx], -1, (0, 255, 0), 3)
+
+        # if top_circles is not None:
+        #     circles = np.uint16(np.around(top_circles))
+        #     for pt in circles[0, :]:
+        #         a, block, r = pt[0], pt[1], pt[2]
+        #         cv2.circle(surface, (a, block), r, (255, 0, 0), -1)
+
+        # cv2.circle(
+        #     surface, (int(center_x_relative), int(center_y_relative)), 4, (255, 0, 255)
+        # )
+
+        # debug = np.concatenate(
+        #     (bbox_depth, top_threshold, edged_threshold, edged_img), axis=1
+        # )
+        # debug = cv2.cvtColor(debug, cv2.COLOR_GRAY2RGB)
+        # debug = np.concatenate((debug, surface), axis=1)
+        # cv2.imshow(str(i), debug)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
 
     print(message_frame)
     return message_frame
@@ -268,6 +289,6 @@ if __name__ == "__main__":
     a = rospy.topics.Subscriber("/camera/color/image_raw", Image, raw_color_callback)
     b = rospy.topics.Subscriber("/camera/depth/image_raw", Image, raw_depth_callback)
     rospy.rostime.wallsleep(2)
-    srv_callback(1)
-    # s = rospy.Service("blocks", Blocks, srv_callback)
-    # rospy.spin()
+    # srv_callback(1)
+    s = rospy.Service("blocks", Blocks, srv_callback)
+    rospy.spin()
