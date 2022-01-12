@@ -95,7 +95,7 @@ bool Gripper::enable_collisions(std::string model) {
   srv.request.mode = "all";
   bool call = m_set_collision.call(srv);
   if (!call) {
-    ROS_ERROR("attach service call failed");
+    ROS_ERROR("enable_collisions service call failed");
     return false;
   }
 
@@ -108,7 +108,7 @@ bool Gripper::disable_collisions(std::string model) {
   srv.request.mode = "none";
   bool call = m_set_collision.call(srv);
   if (!call) {
-    ROS_ERROR("attach service call failed");
+    ROS_ERROR("disable_collisions service call failed");
     return false;
   }
   

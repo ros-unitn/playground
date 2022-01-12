@@ -34,7 +34,7 @@ const Eigen::VectorXd Kinematics::best_angles(const Eigen::VectorXd &actual, con
   for (int i = 0; i < possible.rows(); i++) {
     double diff = 0;
     if (check_row(possible.row(i).transpose())) {
-      for (int j = 0; j < possible.cols(); j++) {
+      for (int j = 1; j < 3; j++) {
         diff += abs(possible.row(i).transpose()(j) - actual(j));
       }
       diffs.push_back(std::make_pair(diff, i));
