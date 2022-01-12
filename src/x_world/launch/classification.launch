@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
 
 <launch>
-  <arg name="world" default="$(find x_world)/world/base.world" />
+  <arg name="world" default="$(find x_world)/world/classification.world" />
 
   <!-- launch the gazebo simulator and spawn the robot -->
   <include file="$(find x_world)/launch/gazebo.launch">

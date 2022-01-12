@@ -16,6 +16,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
 add_service_files(
   FILES
   Link.srv
+  SetCollision.srv
 )
 
 generate_messages(

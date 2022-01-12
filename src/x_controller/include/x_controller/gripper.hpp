@@ -27,7 +27,7 @@
 #define GRIPPER_TOPIC "/gripper_controller/gripper_cmd"
 
 #define GRIPPER_MODEL "robot"
-#define GRIPPER_LINK "tool0"
+#define GRIPPER_LINK "robotiq_2f_base_link"
 
 class Gripper {
 public:
@@ -43,6 +43,9 @@ public:
   bool attach(const std::string &model, const std::string &link);
   bool detach();
 
+  bool enable_collisions(std::string model = GRIPPER_MODEL);
+  bool disable_collisions(std::string model = GRIPPER_MODEL);
+
 protected:
   void done(const actionlib::SimpleClientGoalState &state,
             const control_msgs::GripperCommandResultConstPtr &result);
@@ -54,5 +57,6 @@ private:
   std::string m_attached_link;
   ros::ServiceClient m_attach_client;
   ros::ServiceClient m_detach_client;
+  ros::ServiceClient m_set_collision;
   Client *m_client;
 };

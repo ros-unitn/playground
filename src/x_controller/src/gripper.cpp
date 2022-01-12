@@ -1,15 +1,18 @@
 #include "x_controller/gripper.hpp"
 
 #include <x_linker/Link.h>
+#include <x_linker/SetCollision.h>
 
 #define GRIPPER_SERVICE_ATTACH "/x_linker_node/attach"
 #define GRIPPER_SERVICE_DETACH "/x_linker_node/detach"
+#define GRIPPER_SERVICE_SET_COLLISION "/x_linker_node/set_collision"
 
 Gripper::Gripper(ros::NodeHandle &n) {
   m_client = new Gripper::Client(n, GRIPPER_TOPIC);
   m_client->waitForServer();
   m_attach_client = n.serviceClient<x_linker::Link>(GRIPPER_SERVICE_ATTACH);
   m_detach_client = n.serviceClient<x_linker::Link>(GRIPPER_SERVICE_DETACH);
+  m_set_collision = n.serviceClient<x_linker::SetCollision>(GRIPPER_SERVICE_SET_COLLISION);
 }
 
 Gripper::~Gripper() {
@@ -83,5 +86,31 @@ bool Gripper::detach() {
 
   m_attached = !srv.response.ok;
 
+  return srv.response.ok;
+}
+
+bool Gripper::enable_collisions(std::string model) {
+  x_linker::SetCollision srv;
+  srv.request.model_name = GRIPPER_MODEL;
+  srv.request.mode = "all";
+  bool call = m_set_collision.call(srv);
+  if (!call) {
+    ROS_ERROR("attach service call failed");
+    return false;
+  }
+
+  return srv.response.ok;
+}
+
+bool Gripper::disable_collisions(std::string model) {
+  x_linker::SetCollision srv;
+  srv.request.model_name = GRIPPER_MODEL;
+  srv.request.mode = "none";
+  bool call = m_set_collision.call(srv);
+  if (!call) {
+    ROS_ERROR("attach service call failed");
+    return false;
+  }
+  
   return srv.response.ok;
 }

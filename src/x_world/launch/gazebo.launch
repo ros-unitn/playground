@@ -22,11 +22,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
   <arg name="urdf_xacro" default="$(find x_robot)/urdf/x_robot.urdf.xacro" />
 
   <!-- startup simulated world -->
-  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+  <include file="$(find x_world)/launch/empty_world.launch">
     <arg name="world_name" default="$(arg world)" />
     <arg name="paused" value="$(arg paused)" />
     <arg name="gui" value="$(arg gui)" />
     <arg name="verbose" value="true" />
+    <arg name="debug" value="true" />
   </include>
 
   <!-- launch the gazebo simulator and spawn the robot -->

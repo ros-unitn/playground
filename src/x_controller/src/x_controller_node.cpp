@@ -99,8 +99,8 @@ Eigen::VectorXd refresh_theta() {
 }
 
 bool working_position(ros::Rate &rate, UR5 &ur5, const Eigen::VectorXd &qEs, const Eigen::Vector3d &rot, double max_t, std::string block_name) {
-  
-  Eigen::Vector3d pos = drop_points[block_name];  
+
+  Eigen::Vector3d pos = drop_points[block_name];
 
   ROS_INFO_STREAM("pos: " << pos.transpose());
   ROS_INFO_STREAM("rot: " << rot.transpose());
@@ -119,15 +119,21 @@ bool objects_position(ros::Rate &rate, UR5 &ur5, Gripper &gripper, Eigen::Vector
   execute_motion(rate, ur5, over_pos, rot, refresh_theta(), 1);
   execute_motion(rate, ur5, pos, rot, refresh_theta(), 0.5);
 
-  gripper.push(0.2);
-  gripper.attach(block_name, block_name + "::link");
+  // gripper.disable_collisions(block_name);
+  gripper.push(0.3);
+  if (!gripper.attach(block_name, "link")) {
+    return false;
+  }
 
   execute_motion(rate, ur5, over_pos, rot, refresh_theta(), 0.5);
 
   working_position(rate, ur5, refresh_theta(), rot, 1, block_name); // new_table
 
   gripper.push(0.0);
-  gripper.detach();
+  if (!gripper.detach()) {
+    return false;
+  }
+  // gripper.enable_collisions(block_name);
 
   return true;
 }
@@ -158,17 +164,21 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
+  gripper.disable_collisions();
+
   Eigen::VectorXd original = refresh_theta();
 
-  for (x_msgs::Block b : srv.response.list) {
-    geometry_msgs::Point curr = b.obj;
-    std::string block_name = b.label;
-    double block_rotation = b.angle; //TODO: fix rotation for some blocks
-    Eigen::Vector3d pos = (Eigen::Vector3d() << curr.x, curr.y, curr.z).finished();
+  for (x_msgs::Block block : srv.response.list) {
+    geometry_msgs::Point target = block.obj;
+    std::string block_name = block.label;
+    double block_rotation = block.angle; // TODO: fix rotation for some blocks
+    Eigen::Vector3d pos = (Eigen::Vector3d() << target.x, target.y, target.z).finished();
     objects_position(rate, ur5, gripper, refresh_theta(), pos, block_name, block_rotation);
   }
 
   original_position(rate, ur5, refresh_theta(), original);
+
+  gripper.enable_collisions();
 
   ROS_INFO_STREAM("Success!");
 

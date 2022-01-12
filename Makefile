@@ -43,7 +43,8 @@ $(home)/.gazebo/models:
 	cp -R $(current_dir)/models/$(@F) $@
 
 libraries: $(home)/.ros/libgazebo_mimic_joint_plugin.$(lib_ext) \
-	$(home)/.ros/libx_linker.$(lib_ext)
+	$(home)/.ros/libx_linker.$(lib_ext) \
+	$(home)/.ros/libgazebo_grasp_fix.$(lib_ext)
 
 models: $(home)/.gazebo/models/kinect.model \
 	$(home)/.gazebo/models/ur5_base.model \
@@ -52,7 +53,7 @@ models: $(home)/.gazebo/models/kinect.model \
 	$(home)/.gazebo/models/blocks.model
 
 run: 
-	roslaunch x_world same.launch
+	roslaunch x_world classification.launch
 
 clean:
 	rm -rf $(home)/.ros/*.$(lib_ext)
