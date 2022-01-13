@@ -156,7 +156,6 @@ bool object_position(ros::Rate &rate, UR5 &ur5, Gripper &gripper, Eigen::VectorX
   execute_motion(rate, ur5, over_pos, rot, refresh_theta(), 2);
   execute_motion(rate, ur5, pos, rot, refresh_theta(), 0.5);
 
-  // gripper.disable_collisions(block_name);
   gripper.push(0.3);
   if (!gripper.attach(block_name, "link")) {
     return false;
@@ -166,11 +165,15 @@ bool object_position(ros::Rate &rate, UR5 &ur5, Gripper &gripper, Eigen::VectorX
 
   working_position(rate, ur5, refresh_theta(), rot, 2, block_name); // new_table
 
-  gripper.push(0.0);
+  gripper.push(0.0, true);
   if (!gripper.detach()) {
     return false;
   }
-  // gripper.enable_collisions(block_name);
+
+  while (ros::ok() && gripper.remaining() > 0) {
+    ros::spinOnce();
+    rate.sleep();
+  }
 
   return true;
 }

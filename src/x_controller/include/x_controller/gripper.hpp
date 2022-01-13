@@ -31,13 +31,14 @@
 
 class Gripper {
 public:
-  typedef actionlib::SimpleActionClient<control_msgs::GripperCommandAction> Client;
+  typedef actionlib::SimpleActionClient<control_msgs::GripperCommandAction> ActionClient;
   typedef control_msgs::GripperCommandGoal Goal;
+  typedef actionlib::SimpleClientGoalState GoalState;
 
   Gripper(ros::NodeHandle &n);
   ~Gripper();
 
-  void push(float position);
+  bool push(float position, bool deferred = false);
   size_t remaining() const;
 
   bool attach(const std::string &model, const std::string &link);
@@ -57,6 +58,6 @@ private:
   std::string m_attached_link;
   ros::ServiceClient m_attach_client;
   ros::ServiceClient m_detach_client;
-  ros::ServiceClient m_set_collision;
-  Client *m_client;
+  ros::ServiceClient m_set_collision_client;
+  ActionClient *m_action_client;
 };

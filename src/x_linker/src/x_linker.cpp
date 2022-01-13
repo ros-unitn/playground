@@ -14,56 +14,70 @@ void LinkerPlugin::Load(physics::WorldPtr world, sdf::ElementPtr) {
   }
 
   m_world = world;
+  m_update_conn = event::Events::ConnectBeforePhysicsUpdate(std::bind(&LinkerPlugin::before_physics_update, this));
+
   m_attach_server = m_n.advertiseService("attach", &LinkerPlugin::attach_callback, this);
   m_detach_server = m_n.advertiseService("detach", &LinkerPlugin::detach_callback, this);
   m_set_collision_server = m_n.advertiseService("set_collision", &LinkerPlugin::set_collision_callback, this);
-  m_update_conn = event::Events::ConnectBeforePhysicsUpdate(std::bind(&LinkerPlugin::update, this));
+
   ROS_INFO_STREAM("Attach service at: " << m_n.resolveName("attach"));
   ROS_INFO_STREAM("Detach service at: " << m_n.resolveName("detach"));
+  ROS_INFO_STREAM("Set Collision service at: " << m_n.resolveName("set_collision"));
   ROS_INFO("Link attacher node initialized.");
 }
 
-void LinkerPlugin::update() {
+void LinkerPlugin::before_physics_update() {
+  m_safe_drop_vector_mutex.lock();
+  auto it = m_safe_drop_vector.begin();
+  auto now = std::chrono::high_resolution_clock::now();
+  while (it != m_safe_drop_vector.end()) {
+    if (now > it->expiration) {
+      if (it->link->WorldLinearVel().Abs().Z() < 1e6) {
+        ROS_INFO_STREAM("Safe drop finished for model " << it->model->GetName());
+        it->link->GetInertial()->SetCoG(it->value);
+        it->link->UpdateMass();
+        it = m_safe_drop_vector.erase(it);
+        continue;
+      }
+    }
+    ++it;
+  }
+  m_safe_drop_vector_mutex.unlock();
+
   m_attach_queue_mutex.lock();
   while (!m_attach_queue.empty()) {
-    FixedJoint& fixed = m_attach_queue.front();
-    ROS_INFO_STREAM("Attach");
+    FixedJoint &fixed = m_attach_queue.front();
     fixed.joint->Attach(fixed.link_1, fixed.link_2);
-    ROS_INFO_STREAM("Loading links");
     fixed.joint->Load(fixed.link_1, fixed.link_2, ignition::math::Pose3d());
-    ROS_INFO_STREAM("SetModel");
     fixed.joint->SetModel(fixed.model_2);
-
-    /*
-      * If SetModel is not done we get:
-      * ***** Internal Program Error - assertion (this->GetParentModel() != __null)
-      failed in void gazebo::physics::Entity::PublishPose():
-      /tmp/buildd/gazebo2-2.2.3/gazebo/physics/Entity.cc(225):
-      An entity without a parent model should not happen
-      * If SetModel is given the same model than CreateJoint given
-      * Gazebo crashes with
-      * ***** Internal Program Error - assertion (self->inertial != __null)
-      failed in static void gazebo::physics::ODELink::MoveCallback(dBodyID):
-      /tmp/buildd/gazebo2-2.2.3/gazebo/physics/ode/ODELink.cc(183): Inertial pointer is NULL
-    */
-
-    ROS_INFO_STREAM("SetHightstop");
     fixed.joint->SetUpperLimit(0, 0);
-    ROS_INFO_STREAM("SetLowStop");
     fixed.joint->SetLowerLimit(0, 0);
-    ROS_INFO_STREAM("Init");
     fixed.joint->Init();
-    ROS_INFO_STREAM("Attach finished.");
+    ROS_INFO_STREAM("Attach finished for model " << fixed.model_name_2);
     m_attach_queue.pop();
   }
   m_attach_queue_mutex.unlock();
+
   m_detach_queue_mutex.lock();
 
   while (!m_detach_queue.empty()) {
-    FixedJoint& fixed = m_detach_queue.front();
-    ROS_INFO_STREAM("Detach");
+    FixedJoint &fixed = m_detach_queue.front();
     fixed.joint->Detach();
-    ROS_INFO_STREAM("Detach finished.");
+
+    DeferredValueChange<ignition::math::Pose3d> change;
+    change.model = fixed.model_2;
+    change.link = fixed.link_2;
+    change.value = fixed.link_2->GetInertial()->Pose();
+    change.expiration = std::chrono::high_resolution_clock::now() + std::chrono::seconds(4);
+
+    fixed.link_2->GetInertial()->SetCoG(ignition::math::Pose3d::Zero);
+    fixed.link_2->UpdateMass();
+
+    m_safe_drop_vector_mutex.lock();
+    m_safe_drop_vector.push_back(change);
+    m_safe_drop_vector_mutex.unlock();
+
+    ROS_INFO_STREAM("Detach finished for model " << fixed.model_name_2);
     m_detach_queue.pop();
   }
   m_detach_queue_mutex.unlock();
