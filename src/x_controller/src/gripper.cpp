@@ -1,7 +1,6 @@
 #include "x_controller/gripper.hpp"
 
 #include <x_linker/Link.h>
-#include <x_linker/SafeDrop.h>
 #include <x_linker/SetCollision.h>
 
 #define GRIPPER_SERVICE_ATTACH "/x_linker_node/attach"
