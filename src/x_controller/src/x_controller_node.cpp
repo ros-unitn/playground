@@ -69,19 +69,19 @@ struct Brick {
 };
 
 std::map<std::string, const Eigen::Vector3d> drop_points = {
-    {"X1-Y1-Z2", Eigen::Vector3d(-0.3, -0.45, 0.25)},
-    {"X1-Y2-Z2", Eigen::Vector3d(-0.12, -0.45, 0.25)},
-    {"X1-Y3-Z2", Eigen::Vector3d(0.09, -0.45, 0.25)},
-    {"X1-Y4-Z2", Eigen::Vector3d(0.3, -0.45, 0.25)},
+    {"X1-Y1-Z2", Eigen::Vector3d(-0.3, -0.45, 0.3)},
+    {"X1-Y2-Z2", Eigen::Vector3d(-0.12, -0.45, 0.3)},
+    {"X1-Y3-Z2", Eigen::Vector3d(0.09, -0.45, 0.3)},
+    {"X1-Y4-Z2", Eigen::Vector3d(0.3, -0.45, 0.3)},
 
-    {"X1-Y2-Z1", Eigen::Vector3d(-0.3, -0.61, 0.25)},
-    {"X1-Y2-Z2-TWINFILLET", Eigen::Vector3d(-0.12, -0.61, 0.25)},
-    {"X1-Y3-Z2-FILLET", Eigen::Vector3d(0.09, -0.61, 0.25)},
-    {"X2-Y2-Z2", Eigen::Vector3d(0.3, -0.61, 0.25)},
+    {"X1-Y2-Z1", Eigen::Vector3d(-0.3, -0.61, 0.3)},
+    {"X1-Y2-Z2-TWINFILLET", Eigen::Vector3d(-0.12, -0.61, 0.3)},
+    {"X1-Y3-Z2-FILLET", Eigen::Vector3d(0.09, -0.61, 0.3)},
+    {"X2-Y2-Z2", Eigen::Vector3d(0.3, -0.61, 0.3)},
 
-    {"X1-Y4-Z1", Eigen::Vector3d(-0.3, -0.79, 0.25)},
-    {"X1-Y2-Z2-CHAMFER", Eigen::Vector3d(-0.12, -0.79, 0.25)},
-    {"X2-Y2-Z2-FILLET", Eigen::Vector3d(0.3, -0.79, 0.25)},
+    {"X1-Y4-Z1", Eigen::Vector3d(-0.3, -0.79, 0.3)},
+    {"X1-Y2-Z2-CHAMFER", Eigen::Vector3d(-0.12, -0.79, 0.3)},
+    {"X2-Y2-Z2-FILLET", Eigen::Vector3d(0.3, -0.79, 0.3)},
 };
 
 bool execute_motion(ros::Rate &rate, UR5 &ur5, const Eigen::Vector3d &pos, const Eigen::Vector3d &rot, const Eigen::VectorXd &qEs, double max_t, Eigen::VectorXd qEf = Eigen::VectorXd::Zero(6)) {
@@ -149,6 +149,11 @@ bool working_position(ros::Rate &rate, UR5 &ur5, const Eigen::VectorXd &qEs, con
 
 bool object_position(ros::Rate &rate, UR5 &ur5, Gripper &gripper, Eigen::VectorXd qEs, Eigen::Vector3d &pos, std::string block_name, double block_rotation) {
   Eigen::Vector3d over_pos = pos + Eigen::Vector3d(0.0, 0.0, 0.1);
+  if (block_rotation > 0) {
+    block_rotation = (abs(block_rotation - M_PI) < abs(block_rotation)) ? block_rotation - M_PI : block_rotation;
+  } else {
+    block_rotation = (abs(block_rotation + M_PI) < abs(block_rotation)) ? block_rotation + M_PI : block_rotation;
+  }
   Eigen::Vector3d rot = (Eigen::Vector3d() << -block_rotation, -M_PI, 0.0).finished();
   ROS_INFO_STREAM("pos: " << pos.transpose());
   ROS_INFO_STREAM("rot: " << rot.transpose());

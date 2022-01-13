@@ -52,7 +52,7 @@ x_min = -0.365
 x_max = 0.365
 
 table_gazebo = 0.16
-camera_gazebo = 0.7314285714285716
+camera_gazebo = 0.65
 
 bridge = CvBridge()
 
