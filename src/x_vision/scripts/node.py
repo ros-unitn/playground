@@ -68,6 +68,10 @@ raw_depth_lock = Lock()
 raw_color = None
 raw_depth = None
 
+height_limit = 0.52084965
+z2_height = 140
+z1_height = 180
+
 
 def midpoint(ptA, ptB):
     return ((ptA[0] + ptB[0]) * 0.5, (ptA[1] + ptB[1]) * 0.5)
@@ -83,10 +87,15 @@ def detection(raw_color, raw_depth):
 
     depth = bridge.imgmsg_to_cv2(raw_depth, "32FC1")
 
-    # depth = cv2.normalize(depth, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+    height = depth.copy()
+    height = (height - height_limit) / (height.max() - height_limit)
+    height = height.astype(np.float32)
+    height = cv2.cvtColor(height, cv2.COLOR_GRAY2RGB) * 255
+    height = height.astype(np.uint8)
 
-    depth = (depth - 0.52084965) / (depth.max() - 0.52084965)*256**2
-    depth = depth.astype(np.uint16) # perfect for visualization, but not with all the other functions
+    depth = cv2.normalize(
+        depth, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U
+    )
 
     results = []
     for i, row in enumerate(res.xyxy[0]):
@@ -104,7 +113,6 @@ def detection(raw_color, raw_depth):
     duplicate = []
 
     for obj in results:
-        print(obj)
         for obj2 in results:
             if (
                 obj["id"] != obj2["id"]
@@ -129,13 +137,6 @@ def detection(raw_color, raw_depth):
 
     message_frame = BlocksResponse()
 
-    blocks_with_z2 = [obj["label"].endswith("Z2") and obj["label"] not in confusing_z2 for obj in results]
-    z2_height = None
-    if len(blocks_with_z2) > 0:
-        z2_height = depth.min()
-
-    results = sorted(results, key=lambda obj: 0 if obj["label"] not in confusing_z else 1)
-
     for i, obj in enumerate(results):
         y1 = max(int(obj["y1"]) - 5, 0)
         y2 = min(int(obj["y2"]) + 5, h)
@@ -144,9 +145,10 @@ def detection(raw_color, raw_depth):
 
         bbox_color = cv2.blur(color[y1:y2, x1:x2], (1, 1))
         bbox_depth = cv2.blur(depth[y1:y2, x1:x2], (1, 1))
+        bbox_height = cv2.blur(height[y1:y2, x1:x2], (1, 1))
 
         # Debug
-        
+
         surface = bbox_color.copy()
 
         ## Contours
@@ -187,26 +189,41 @@ def detection(raw_color, raw_depth):
         z_coord = table_gazebo + (camera_gazebo - table_gazebo) * object_p
 
         min_area_rect = cv2.minAreaRect(c)
-        angle = min_area_rect[2]
-        width = min_area_rect[1][0]
-        height = min_area_rect[1][1]
-        if width < height:
-            angle = angle + 90
+        min_area_rect_angle = min_area_rect[2]
+        min_area_rect_width = min_area_rect[1][0]
+        min_area_rect_height = min_area_rect[1][1]
+        if min_area_rect_width < min_area_rect_height:
+            min_area_rect_angle = min_area_rect_angle + 90
         else:
-            angle = angle + 180
+            min_area_rect_angle = min_area_rect_angle + 180
+
+        ## Mask
 
         mask = np.zeros(bbox_depth.shape[:2], dtype="uint8")
         box = cv2.boxPoints(min_area_rect)
         box = np.int0(box)
         cv2.drawContours(mask, [box], 0, (255, 255, 255), -1)
 
+        ## Masked depth
+
         bbox_depth_inv = cv2.bitwise_not(bbox_depth)
-        masked = cv2.bitwise_not(cv2.bitwise_and(bbox_depth_inv, bbox_depth_inv, mask=mask))
+        masked_depth = cv2.bitwise_not(
+            cv2.bitwise_and(bbox_depth_inv, bbox_depth_inv, mask=mask)
+        )
 
-        ## Circle detection
+        ## Masked height
 
-        circles_thresh = masked.min() + 3
-        _, circles_threshold = cv2.threshold(masked, circles_thresh, 255, cv2.THRESH_BINARY)
+        bbox_height_inv = cv2.bitwise_not(bbox_height)
+        masked_height = cv2.bitwise_not(
+            cv2.bitwise_and(bbox_height_inv, bbox_height_inv, mask=mask)
+        )
+
+        # Circle detection
+
+        circles_thresh = masked_depth.min() + 3
+        _, circles_threshold = cv2.threshold(
+            masked_depth, circles_thresh, 255, cv2.THRESH_BINARY
+        )
         circles_img = cv2.blur(circles_threshold, (4, 4))
         circles = cv2.HoughCircles(
             circles_img,
@@ -231,18 +248,20 @@ def detection(raw_color, raw_depth):
         if obj["label"] in confusing_z:
             ## ... and it's also upright and there is at least one identifiable z2 block
             if circles is not None:
-                block_height = masked.min()
-                if z2_height is not None:
-                    if obj["label"] in confusing_z1 and block_height < z2_height + 3:
-                        obj["label"] = z1_to_z2[obj["label"]]
-                    elif obj["label"] in confusing_z2 and block_height > z2_height + 3:
-                        obj["label"] = z2_to_z1[obj["label"]]
+                block_height = masked_height.min()
+                probably_z2 = abs(block_height - z2_height) < abs(
+                    block_height - z1_height
+                )
+                probably_z1 = not probably_z2
+                print(obj["label"], block_height, probably_z1, probably_z2)
+                if obj["label"] in confusing_z1 and probably_z2:
+                    obj["label"] = z1_to_z2[obj["label"]]
+                elif obj["label"] in confusing_z2 and probably_z1:
+                    obj["label"] = z2_to_z1[obj["label"]]
 
         ## Block orientation (may be buggy)
 
-        sides = cv2.approxPolyDP(
-                 c, 0.01 * cv2.arcLength(c, True), True
-             )
+        sides = cv2.approxPolyDP(c, 0.01 * cv2.arcLength(c, True), True)
 
         ## Conclusions
 
@@ -250,10 +269,13 @@ def detection(raw_color, raw_depth):
         label = obj["label"]
         block = Block()
         block.obj = point
-        block.angle = np.radians(angle)
+        block.angle = np.radians(min_area_rect_angle)
         block.label = label
-        #block.orientation = "upright" if circles is not None else "side"
-        block.orientation = "upright" if circles is not None else "side" if len(sides)>9 else "upside down"
+        block.orientation = "side"
+        if len(sides) <= 9:
+            block.orientation = "down"
+        if circles is not None:
+            block.orientation = "up"
 
         message_frame.list.append(block)
 
