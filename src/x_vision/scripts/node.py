@@ -52,7 +52,7 @@ x_min = -0.365
 x_max = 0.365
 
 table_gazebo = 0.16
-camera_gazebo = 0.7314285714285716
+camera_gazebo = 0.65
 
 bridge = CvBridge()
 
@@ -125,10 +125,10 @@ def detection(raw_color, raw_depth):
     message_frame = BlocksResponse()
 
     for i, obj in enumerate(results):
-        y1 = int(obj["y1"])
-        y2 = int(obj["y2"])
-        x1 = int(obj["x1"])
-        x2 = int(obj["x2"])
+        y1 = int(obj["y1"])-5
+        y2 = int(obj["y2"])+5
+        x1 = int(obj["x1"])-5
+        x2 = int(obj["x2"])+5
 
         bbox_depth = cv2.blur(normalized_depth[y1:y2, x1:x2], (1, 1))
         bbox_color = cv2.blur(color[y1:y2, x1:x2], (1, 1))
@@ -161,11 +161,12 @@ def detection(raw_color, raw_depth):
         edged_threshold = cv2.GaussianBlur(edged_threshold, (11, 11), 0)
         edged_img = cv2.Canny(edged_threshold, 50, 100)
         edged_img = cv2.dilate(edged_img, None, iterations=1)
-        edged_img = cv2.erode(edged_img, None, iterations=1)
+        edged_img = cv2.erode(edged_img, None, iterations=1)  
 
         contours = cv2.findContours(
             edged_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
         )
+        
         contours = imutils.grab_contours(contours)
 
         ## Angle of the block
@@ -175,31 +176,10 @@ def detection(raw_color, raw_depth):
         assert len(contours) >= 1
         c = contours[-1]
 
-        min_area_rect = cv2.minAreaRect(c)
-        angle = min_area_rect[2]
-        width = min_area_rect[1][0]
-        height = min_area_rect[1][1]
-        if width < height:
-            angle = angle + 90
-        else:
-            angle = angle + 180
-
-        box = (
-            cv2.cv.BoxPoints(min_area_rect)
-            if imutils.is_cv2()
-            else cv2.boxPoints(min_area_rect)
-        )
-
-        box = np.array(box, dtype="int")
-
-        box = imperspective.order_points(box)
-
-        (tl, _, br, _) = box
-
-        (center_x_relative, center_y_relative) = midpoint(tl, br)
-
-        center_x = center_x_relative + obj["x1"]
-        center_y = center_y_relative + obj["y1"]
+        M = cv2.moments(c)
+        assert M["m00"] != 0
+        center_x = int(M["m10"] / M["m00"]) + x1
+        center_y = int(M["m01"] / M["m00"]) + y1
 
         x_coord = y_min + (y_max - y_min) * center_y / 1024
         y_coord = x_min + (x_max - x_min) * center_x / 1024
@@ -208,6 +188,15 @@ def detection(raw_color, raw_depth):
 
         object_p = (object_depth - table_depth) / (0 - table_depth)
         z_coord = table_gazebo + (camera_gazebo - table_gazebo) * object_p
+
+        min_area_rect = cv2.minAreaRect(c)
+        angle = min_area_rect[2]
+        width = min_area_rect[1][0]
+        height = min_area_rect[1][1]
+        if width < height:
+            angle = angle + 90
+        else:
+            angle = angle + 180
 
         ## Conclusions
 
@@ -288,7 +277,7 @@ if __name__ == "__main__":
     rospy.init_node("x_vision_node")
     a = rospy.topics.Subscriber("/camera/color/image_raw", Image, raw_color_callback)
     b = rospy.topics.Subscriber("/camera/depth/image_raw", Image, raw_depth_callback)
-    rospy.rostime.wallsleep(2)
+    rospy.rostime.wallsleep(4)
     # srv_callback(1)
     s = rospy.Service("blocks", Blocks, srv_callback)
     rospy.spin()

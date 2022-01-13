@@ -31,20 +31,57 @@
 #include "x_msgs/Block.h"
 #include "x_msgs/Blocks.h"
 
+struct Brick {
+  x_msgs::Block block;
+  int key;
+
+  Brick(x_msgs::Block b) {
+
+    block = b;
+
+    if (block.label == "X1-Y1-Z2")
+      key = 1;
+    else if (block.label == "X1-Y2-Z1")
+      key = 2;
+    else if (block.label == "X1-Y4-Z1")
+      key = 3;
+    else if (block.label == "X1-Y2-Z2")
+      key = 4;
+    else if (block.label == "X1-Y2-Z2-TWINFILLET")
+      key = 5;
+    else if (block.label == "X1-Y2-Z2-CHAMFER")
+      key = 6;
+    else if (block.label == "X1-Y3-Z2")
+      key = 7;
+    else if (block.label == "X1-Y3-Z2-FILLET")
+      key = 8;
+    else if (block.label == "X1-Y4-Z2")
+      key = 9;
+    else if (block.label == "X2-Y2-Z2")
+      key = 10;
+    else if (block.label == "X2-Y2-Z2-FILLET")
+      key = 11;
+  }
+
+  bool operator<(const Brick &b) const {
+    return key < b.key;
+  }
+};
+
 std::map<std::string, const Eigen::Vector3d> drop_points = {
-    {"X1-Y1-Z2", Eigen::Vector3d(-0.3, -0.45, 0.25)},
-    {"X1-Y2-Z2", Eigen::Vector3d(-0.12, -0.45, 0.25)},
-    {"X1-Y3-Z2", Eigen::Vector3d(0.09, -0.45, 0.25)},
-    {"X1-Y4-Z2", Eigen::Vector3d(0.3, -0.45, 0.25)},
+    {"X1-Y1-Z2", Eigen::Vector3d(-0.3, -0.45, 0.3)},
+    {"X1-Y2-Z2", Eigen::Vector3d(-0.12, -0.45, 0.3)},
+    {"X1-Y3-Z2", Eigen::Vector3d(0.09, -0.45, 0.3)},
+    {"X1-Y4-Z2", Eigen::Vector3d(0.3, -0.45, 0.3)},
 
-    {"X1-Y2-Z1", Eigen::Vector3d(-0.3, -0.61, 0.25)},
-    {"X1-Y2-Z2-TWINFILLET", Eigen::Vector3d(-0.12, -0.61, 0.25)},
-    {"X1-Y3-Z2-FILLET", Eigen::Vector3d(0.09, -0.61, 0.25)},
-    {"X2-Y2-Z2", Eigen::Vector3d(0.3, -0.61, 0.25)},
+    {"X1-Y2-Z1", Eigen::Vector3d(-0.3, -0.61, 0.3)},
+    {"X1-Y2-Z2-TWINFILLET", Eigen::Vector3d(-0.12, -0.61, 0.3)},
+    {"X1-Y3-Z2-FILLET", Eigen::Vector3d(0.09, -0.61, 0.3)},
+    {"X2-Y2-Z2", Eigen::Vector3d(0.3, -0.61, 0.3)},
 
-    {"X1-Y4-Z1", Eigen::Vector3d(-0.3, -0.79, 0.25)},
-    {"X1-Y2-Z2-CHAMFER", Eigen::Vector3d(-0.12, -0.79, 0.25)},
-    {"X2-Y2-Z2-FILLET", Eigen::Vector3d(0.3, -0.79, 0.25)},
+    {"X1-Y4-Z1", Eigen::Vector3d(-0.3, -0.79, 0.3)},
+    {"X1-Y2-Z2-CHAMFER", Eigen::Vector3d(-0.12, -0.79, 0.3)},
+    {"X2-Y2-Z2-FILLET", Eigen::Vector3d(0.3, -0.79, 0.3)},
 };
 
 bool execute_motion(ros::Rate &rate, UR5 &ur5, const Eigen::Vector3d &pos, const Eigen::Vector3d &rot, const Eigen::VectorXd &qEs, double max_t, Eigen::VectorXd qEf = Eigen::VectorXd::Zero(6)) {
@@ -110,16 +147,20 @@ bool working_position(ros::Rate &rate, UR5 &ur5, const Eigen::VectorXd &qEs, con
   return true;
 }
 
-bool objects_position(ros::Rate &rate, UR5 &ur5, Gripper &gripper, Eigen::VectorXd qEs, Eigen::Vector3d &pos, std::string block_name, double block_rotation) {
+bool object_position(ros::Rate &rate, UR5 &ur5, Gripper &gripper, Eigen::VectorXd qEs, Eigen::Vector3d &pos, std::string block_name, double block_rotation) {
   Eigen::Vector3d over_pos = pos + Eigen::Vector3d(0.0, 0.0, 0.1);
-  Eigen::Vector3d rot = (Eigen::Vector3d() << block_rotation, -M_PI, 0.0).finished();
+  if (block_rotation > 0) {
+    block_rotation = (abs(block_rotation - M_PI) < abs(block_rotation)) ? block_rotation - M_PI : block_rotation;
+  } else {
+    block_rotation = (abs(block_rotation + M_PI) < abs(block_rotation)) ? block_rotation + M_PI : block_rotation;
+  }
+  Eigen::Vector3d rot = (Eigen::Vector3d() << -block_rotation, -M_PI, 0.0).finished();
   ROS_INFO_STREAM("pos: " << pos.transpose());
   ROS_INFO_STREAM("rot: " << rot.transpose());
 
-  execute_motion(rate, ur5, over_pos, rot, refresh_theta(), 1);
+  execute_motion(rate, ur5, over_pos, rot, refresh_theta(), 2);
   execute_motion(rate, ur5, pos, rot, refresh_theta(), 0.5);
 
-  // gripper.disable_collisions(block_name);
   gripper.push(0.3);
   if (!gripper.attach(block_name, "link")) {
     return false;
@@ -127,13 +168,17 @@ bool objects_position(ros::Rate &rate, UR5 &ur5, Gripper &gripper, Eigen::Vector
 
   execute_motion(rate, ur5, over_pos, rot, refresh_theta(), 0.5);
 
-  working_position(rate, ur5, refresh_theta(), rot, 1, block_name); // new_table
+  working_position(rate, ur5, refresh_theta(), rot, 2, block_name); // new_table
 
-  gripper.push(0.0);
+  gripper.push(0.0, true);
   if (!gripper.detach()) {
     return false;
   }
-  // gripper.enable_collisions(block_name);
+
+  while (ros::ok() && gripper.remaining() > 0) {
+    ros::spinOnce();
+    rate.sleep();
+  }
 
   return true;
 }
@@ -168,12 +213,27 @@ int main(int argc, char *argv[]) {
 
   Eigen::VectorXd original = refresh_theta();
 
-  for (x_msgs::Block block : srv.response.list) {
-    geometry_msgs::Point target = block.obj;
-    std::string block_name = block.label;
-    double block_rotation = block.angle; // TODO: fix rotation for some blocks
-    Eigen::Vector3d pos = (Eigen::Vector3d() << target.x, target.y, target.z).finished();
-    objects_position(rate, ur5, gripper, refresh_theta(), pos, block_name, block_rotation);
+  while (srv.response.list.size() > 0) {
+    std::vector<Brick> blocchi;
+
+    for (x_msgs::Block b : srv.response.list) {
+      blocchi.push_back(Brick(b));
+    }
+
+    std::sort(blocchi.begin(), blocchi.end(), std::less<Brick>());
+
+    geometry_msgs::Point curr = blocchi[0].block.obj;
+    std::string block_name = blocchi[0].block.label;
+    double block_rotation = blocchi[0].block.angle; // TODO: fix rotation for some blocks
+    Eigen::Vector3d pos = (Eigen::Vector3d() << curr.x, curr.y, curr.z).finished();
+    object_position(rate, ur5, gripper, refresh_theta(), pos, block_name, block_rotation);
+
+    if (client.call(srv)) {
+      ROS_INFO_STREAM("Found " << srv.response.list.size() << " blocks");
+    } else {
+      ROS_INFO_STREAM("Failed to call service");
+      return 1;
+    }
   }
 
   original_position(rate, ur5, refresh_theta(), original);
