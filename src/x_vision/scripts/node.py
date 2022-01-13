@@ -82,7 +82,11 @@ def detection(raw_color, raw_depth):
     color = bridge.imgmsg_to_cv2(raw_color, "bgr8")
 
     depth = bridge.imgmsg_to_cv2(raw_depth, "32FC1")
-    depth = cv2.normalize(depth, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+
+    # depth = cv2.normalize(depth, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+
+    depth = (depth - 0.52084965) / (depth.max() - 0.52084965)*256**2
+    depth = depth.astype(np.uint16) # perfect for visualization, but not with all the other functions
 
     results = []
     for i, row in enumerate(res.xyxy[0]):
@@ -234,6 +238,12 @@ def detection(raw_color, raw_depth):
                     elif obj["label"] in confusing_z2 and block_height > z2_height + 3:
                         obj["label"] = z2_to_z1[obj["label"]]
 
+        ## Block orientation (may be buggy)
+
+        sides = cv2.approxPolyDP(
+                 c, 0.01 * cv2.arcLength(c, True), True
+             )
+
         ## Conclusions
 
         point = Point(x_coord, y_coord, z_coord)
@@ -242,7 +252,8 @@ def detection(raw_color, raw_depth):
         block.obj = point
         block.angle = np.radians(angle)
         block.label = label
-        block.orientation = "upright" if circles is not None else "side"
+        #block.orientation = "upright" if circles is not None else "side"
+        block.orientation = "upright" if circles is not None else "side" if len(sides)>9 else "upside down"
 
         message_frame.list.append(block)
 
