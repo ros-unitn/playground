@@ -135,9 +135,12 @@ Eigen::VectorXd refresh_theta() {
   return theta;
 }
 
-bool working_position(ros::Rate &rate, UR5 &ur5, const Eigen::VectorXd &qEs, const Eigen::Vector3d &rot, double max_t, std::string block_name) {
+bool working_position(ros::Rate &rate, UR5 &ur5, const Eigen::VectorXd &qEs, Eigen::Vector3d rot, double max_t, std::string block_name, double inclination) {
 
   Eigen::Vector3d pos = drop_points[block_name];
+  if (inclination < 0) rot += Eigen::Vector3d(0, 0.1*cos(inclination), 0);
+  else if (inclination > 0) rot -= Eigen::Vector3d(0, 0.1*cos(inclination), 0);
+
 
   ROS_INFO_STREAM("pos: " << pos.transpose());
   ROS_INFO_STREAM("rot: " << rot.transpose());
@@ -147,14 +150,14 @@ bool working_position(ros::Rate &rate, UR5 &ur5, const Eigen::VectorXd &qEs, con
   return true;
 }
 
-bool object_position(ros::Rate &rate, UR5 &ur5, Gripper &gripper, Eigen::VectorXd qEs, Eigen::Vector3d &pos, std::string block_name, double block_rotation) {
+bool object_position(ros::Rate &rate, UR5 &ur5, Gripper &gripper, Eigen::VectorXd qEs, Eigen::Vector3d &pos, std::string block_name, double rotation, double inclination) {
   Eigen::Vector3d over_pos = pos + Eigen::Vector3d(0.0, 0.0, 0.1);
-  if (block_rotation > 0) {
-    block_rotation = (abs(block_rotation - M_PI) < abs(block_rotation)) ? block_rotation - M_PI : block_rotation;
+  if (rotation > 0) {
+    rotation = (abs(rotation - M_PI) < abs(rotation)) ? rotation - M_PI : rotation;
   } else {
-    block_rotation = (abs(block_rotation + M_PI) < abs(block_rotation)) ? block_rotation + M_PI : block_rotation;
+    rotation = (abs(rotation + M_PI) < abs(rotation)) ? rotation + M_PI : rotation;
   }
-  Eigen::Vector3d rot = (Eigen::Vector3d() << -block_rotation, -M_PI, 0.0).finished();
+  Eigen::Vector3d rot = (Eigen::Vector3d() << -rotation, -M_PI, 0).finished();
   ROS_INFO_STREAM("pos: " << pos.transpose());
   ROS_INFO_STREAM("rot: " << rot.transpose());
 
@@ -168,7 +171,9 @@ bool object_position(ros::Rate &rate, UR5 &ur5, Gripper &gripper, Eigen::VectorX
 
   execute_motion(rate, ur5, over_pos, rot, refresh_theta(), 0.5);
 
-  working_position(rate, ur5, refresh_theta(), rot, 2, block_name); // new_table
+  rot = rot + Eigen::Vector3d(0.0, inclination, 0.0);
+
+  working_position(rate, ur5, refresh_theta(), rot, 2, block_name, inclination); // new_table
 
   gripper.push(0.0, true);
   if (!gripper.detach()) {
@@ -224,9 +229,10 @@ int main(int argc, char *argv[]) {
 
     geometry_msgs::Point curr = blocchi[0].block.obj;
     std::string block_name = blocchi[0].block.label;
-    double block_rotation = blocchi[0].block.angle; // TODO: fix rotation for some blocks
+    double rotation = blocchi[0].block.angle;
+    double inclination = blocchi[0].block.inclination;
     Eigen::Vector3d pos = (Eigen::Vector3d() << curr.x, curr.y, curr.z).finished();
-    object_position(rate, ur5, gripper, refresh_theta(), pos, block_name, block_rotation);
+    object_position(rate, ur5, gripper, refresh_theta(), pos, block_name, rotation, inclination);
 
     if (client.call(srv)) {
       ROS_INFO_STREAM("Found " << srv.response.list.size() << " blocks");

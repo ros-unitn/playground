@@ -9,6 +9,7 @@ import torch
 import numpy as np
 import rospy
 import imutils
+import math
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Point
 from cv_bridge import CvBridge
@@ -179,6 +180,7 @@ def detection(raw_color, raw_depth):
         assert M["m00"] != 0
         center_x = int(M["m10"] / M["m00"]) + x1
         center_y = int(M["m01"] / M["m00"]) + y1
+        cv2.circle(color, (int(center_x), int(center_y)), 5, (0, 0, 255), -1)
 
         x_coord = y_min + (y_max - y_min) * center_y / 1024
         y_coord = x_min + (x_max - x_min) * center_x / 1024
@@ -263,6 +265,24 @@ def detection(raw_color, raw_depth):
 
         sides = cv2.approxPolyDP(c, 0.01 * cv2.arcLength(c, True), True)
 
+        ## In case block is not upright 
+
+        lines = cv2.HoughLinesP(edged_img, 1, np.pi / 180, 25, minLineLength=5, maxLineGap=50)
+        inclination = 0
+        if lines is not None:
+            for p1x,p1y,p2x,p2y in lines[0]:
+                cv2.line(color, (int(p1x+x1), int(p1y+y1)), (int(p2x+x1), int(p2y+y1)), (0, 255, 0), 2)
+                if p1x+x1<center_x and p2x+x1<center_x and center_y<max(p1y+y1,p2y+y1):
+                    inclination=np.radians(-30)
+                elif p1x+x1>center_x and p2x+x1>center_x and center_y>min(p1y+y1,p2y+y1):
+                    inclination=np.radians(30)
+                elif p1y+y1<center_y and p2y+y1<center_y and center_x<max(p1x+x1,p2x+x1):
+                    inclination=np.radians(-30)
+                elif p1y+y1>center_y and p2y+y1>center_y and center_x>min(p1x+x1,p2x+x1):
+                    inclination=np.radians(30)
+                else:
+                    inclination=np.radians(45)
+
         ## Conclusions
 
         point = Point(x_coord, y_coord, z_coord)
@@ -271,11 +291,9 @@ def detection(raw_color, raw_depth):
         block.obj = point
         block.angle = np.radians(min_area_rect_angle)
         block.label = label
-        block.orientation = "side"
-        if len(sides) <= 9:
-            block.orientation = "down"
+        block.inclination = inclination
         if circles is not None:
-            block.orientation = "up"
+            block.inclination = 0
 
         message_frame.list.append(block)
 
@@ -295,6 +313,8 @@ def detection(raw_color, raw_depth):
         # cv2.waitKey(0)
         # cv2.destroyWindow(str(i))
 
+    #cv2.imshow("color", color)
+    #cv2.waitKey(0)
     print(message_frame)
     return message_frame
 
