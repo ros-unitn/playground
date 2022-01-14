@@ -1,4 +1,4 @@
 geometry_msgs/Point obj
 float64 angle
 string label
-string orientation
+float64 inclination

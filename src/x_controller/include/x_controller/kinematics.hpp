@@ -25,7 +25,6 @@ public:
   // get homogeneous matrix from forward kinematics
   static const Eigen::Matrix4d fk(const Eigen::VectorXd &theta);
 
-  // TODO: remove
   // get best angles for p2p trajectory
   static const Eigen::VectorXd best_angles(const Eigen::VectorXd &actual, const Eigen::MatrixXd &possible);
 

@@ -27,8 +27,8 @@ file_path = Path(__file__)
 playground_path = file_path.parents[3]
 models_path = playground_path.joinpath("models", "blocks.model")
 
-x_space = [0.55, 0.65, 0.75]
-y_space = [0.25, 0.0, -0.25]
+x_space = [0.50, 0.65, 0.80]
+y_space = [0.25, -0.25]
 z = 0.8
 
 
@@ -50,7 +50,11 @@ if __name__ == "__main__":
     random_names = names.copy() + names.copy()
     random.shuffle(random_names)
     random_names = random_names[:len(random_names)//2]
+    # random_names = random_names[:1]
 
-    for name, (x, y) in zip(random_names, product(x_space, y_space)):
+    random_positions = list(product(x_space, y_space))
+    random.shuffle(random_positions)
+
+    for name, (x, y) in zip(random_names, random_positions):
         qx, qy, qz, qw = [random.random() * 2 * math.pi for _ in range(4)]
         spawn_model(name, pos=Point(x, y, z), quat=Quaternion(qx, qy, qz, qw))

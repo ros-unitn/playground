@@ -9,6 +9,7 @@ import torch
 import numpy as np
 import rospy
 import imutils
+import math
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Point
 from cv_bridge import CvBridge
@@ -84,7 +85,6 @@ def detection(raw_color, raw_depth):
     res = model(ros_image)
 
     color = bridge.imgmsg_to_cv2(raw_color, "bgr8")
-
     depth = bridge.imgmsg_to_cv2(raw_depth, "32FC1")
 
     orig_depth = depth.copy()
@@ -143,13 +143,8 @@ def detection(raw_color, raw_depth):
         x1 = max(int(obj["x1"]) - 5, 0)
         x2 = min(int(obj["x2"]) + 5, w)
 
-        bbox_color = cv2.blur(color[y1:y2, x1:x2], (1, 1))
         bbox_depth = cv2.blur(depth[y1:y2, x1:x2], (1, 1))
         bbox_height = cv2.blur(height[y1:y2, x1:x2], (1, 1))
-
-        # Debug
-
-        surface = bbox_color.copy()
 
         ## Contours
 
@@ -220,6 +215,7 @@ def detection(raw_color, raw_depth):
 
         # Circle detection
 
+
         circles_thresh = masked_depth.min() + 3
         _, circles_threshold = cv2.threshold(
             masked_depth, circles_thresh, 255, cv2.THRESH_BINARY
@@ -235,13 +231,6 @@ def detection(raw_color, raw_depth):
             minRadius=0,
             maxRadius=0,
         )
-
-        if circles is not None:
-            circles = np.uint16(np.around(circles))
-            for pt in circles[0, :]:
-                x, y, r = pt[0], pt[1], pt[2]
-                cv2.circle(surface, (x, y), r, (255, 0, 0), -1)
-
         ## Saving asses
 
         ## If block is confusing
@@ -259,9 +248,40 @@ def detection(raw_color, raw_depth):
                 elif obj["label"] in confusing_z2 and probably_z1:
                     obj["label"] = z2_to_z1[obj["label"]]
 
-        ## Block orientation (may be buggy)
+        ## In case block is not upright
 
-        sides = cv2.approxPolyDP(c, 0.01 * cv2.arcLength(c, True), True)
+        lines = cv2.HoughLinesP(
+            edged_img, 1, np.pi / 180, 25, minLineLength=5, maxLineGap=50
+        )
+        inclination = 0
+        if lines is not None:
+            for p1x, p1y, p2x, p2y in lines[0]:
+                if (
+                    p1x + x1 < center_x
+                    and p2x + x1 < center_x
+                    and center_y < max(p1y + y1, p2y + y1)
+                ):
+                    inclination = np.radians(-15)
+                elif (
+                    p1x + x1 > center_x
+                    and p2x + x1 > center_x
+                    and center_y > min(p1y + y1, p2y + y1)
+                ):
+                    inclination = np.radians(15)
+                elif (
+                    p1y + y1 < center_y
+                    and p2y + y1 < center_y
+                    and center_x < max(p1x + x1, p2x + x1)
+                ):
+                    inclination = np.radians(-15)
+                elif (
+                    p1y + y1 > center_y
+                    and p2y + y1 > center_y
+                    and center_x > min(p1x + x1, p2x + x1)
+                ):
+                    inclination = np.radians(15)
+                else:
+                    inclination = np.radians(30)
 
         ## Conclusions
 
@@ -271,19 +291,32 @@ def detection(raw_color, raw_depth):
         block.obj = point
         block.angle = np.radians(min_area_rect_angle)
         block.label = label
-        block.orientation = "side"
-        if len(sides) <= 9:
-            block.orientation = "down"
+        block.inclination = inclination
         if circles is not None:
-            block.orientation = "up"
+            block.inclination = 0
 
         message_frame.list.append(block)
 
+        random_color = list(np.random.random(size=3) * 256)
+        black = (0, 0, 0)
+        cv2.rectangle(color, (x1, y1), (x2, y2), random_color, 4)
+        cv2.putText(color, block.label, (x1, y1-5), cv2.FONT_HERSHEY_SIMPLEX, 0.8, black, 2)
+
         ## Debug
+
+        # bbox_color = cv2.blur(color[y1:y2, x1:x2], (1, 1))
+        # surface = bbox_color.copy()
 
         # cv2.drawContours(
         #     surface, [np.int0(cv2.boxPoints(min_area_rect))], 0, (0, 0, 255), -1
         # )
+
+        # if circles is not None:
+        #     circles = np.uint16(np.around(circles))
+        #     for pt in circles[0, :]:
+        #         x, y, r = pt[0], pt[1], pt[2]
+        #         cv2.circle(color, (x1+x, y1+y), r, (255, 0, 0), -1)
+
 
         # for contour in contours:
         #     approx = cv2.approxPolyDP(
@@ -295,6 +328,9 @@ def detection(raw_color, raw_depth):
         # cv2.waitKey(0)
         # cv2.destroyWindow(str(i))
 
+    # cv2.imshow("color", color)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
     print(message_frame)
     return message_frame
 
