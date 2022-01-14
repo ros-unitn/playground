@@ -15,7 +15,7 @@ from cv_bridge import CvBridge
 from imutils import contours as imcontours
 
 from x_msgs.msg import Block
-from x_msgs.srv import BlocksResponse
+from x_msgs.srv import Blocks, BlocksResponse
 
 file_path = Path(__file__)
 package_path = file_path.parents[1]
@@ -87,15 +87,15 @@ def detection(raw_color, raw_depth):
 
     depth = bridge.imgmsg_to_cv2(raw_depth, "32FC1")
 
+    orig_depth = depth.copy()
+
     height = depth.copy()
     height = (height - height_limit) / (height.max() - height_limit)
     height = height.astype(np.float32)
     height = cv2.cvtColor(height, cv2.COLOR_GRAY2RGB) * 255
     height = height.astype(np.uint8)
 
-    depth = cv2.normalize(
-        depth, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U
-    )
+    depth = cv2.normalize(depth, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8U)
 
     results = []
     for i, row in enumerate(res.xyxy[0]):
@@ -183,7 +183,7 @@ def detection(raw_color, raw_depth):
         x_coord = y_min + (y_max - y_min) * center_y / 1024
         y_coord = x_min + (x_max - x_min) * center_x / 1024
 
-        object_depth = depth[int(center_y), int(center_x)] / 255.0
+        object_depth = orig_depth[int(center_y), int(center_x)]
 
         object_p = (object_depth - table_depth) / (0 - table_depth)
         z_coord = table_gazebo + (camera_gazebo - table_gazebo) * object_p
@@ -333,6 +333,6 @@ if __name__ == "__main__":
     a = rospy.topics.Subscriber("/camera/color/image_raw", Image, raw_color_callback)
     b = rospy.topics.Subscriber("/camera/depth/image_raw", Image, raw_depth_callback)
     rospy.rostime.wallsleep(4)
-    srv_callback(1)
-    # s = rospy.Service("blocks", Blocks, srv_callback)
-    # rospy.spin()
+    # srv_callback(1)
+    s = rospy.Service("blocks", Blocks, srv_callback)
+    rospy.spin()
