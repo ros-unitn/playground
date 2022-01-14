@@ -28,12 +28,11 @@ const bool Kinematics::check_row(const Eigen::VectorXd &vec) {
 }
 
 const Eigen::VectorXd Kinematics::best_angles(const Eigen::VectorXd &actual, const Eigen::MatrixXd &possible) {
-
   std::vector<std::pair<double, short>> diffs;
 
   for (int i = 0; i < possible.rows(); i++) {
     double diff = 0;
-    if (check_row(possible.row(i).transpose()) && abs(possible.row(i).transpose()(0))<2.8 && possible.row(i)(4) < 0) {
+    if (check_row(possible.row(i).transpose()) && abs(possible.row(i).transpose()(0)) < 2.8 && possible.row(i)(4) < 0) {
       for (int j = 1; j < 4; j++) {
         diff += abs(possible.row(i).transpose()(j) - actual(j));
       }
@@ -42,10 +41,6 @@ const Eigen::VectorXd Kinematics::best_angles(const Eigen::VectorXd &actual, con
   }
 
   std::sort(diffs.begin(), diffs.end());
-
-  //std::cout << "Actual: " << actual.transpose() << std::endl;
-  //std::cout << "Possible:\n" << possible << std::endl;
-  //std::cout << "Choosed: " << possible.row(diffs[0].second) << std::endl;
 
   return possible.row(diffs[0].second).transpose();
 }

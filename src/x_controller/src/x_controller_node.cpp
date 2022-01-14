@@ -18,12 +18,15 @@
 #define _USE_MATH_DEFINES
 
 #include <cmath>
+#include <exception>
 #include <geometry_msgs/Point.h>
 #include <iostream>
 #include <map>
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
 #include <string>
+
+#include "x_controller/vendor/linenoise.hpp"
 
 #include "x_controller/gripper.hpp"
 #include "x_controller/kinematics.hpp"
@@ -36,7 +39,6 @@ struct Brick {
   int key;
 
   Brick(x_msgs::Block b) {
-
     block = b;
 
     if (block.label == "X1-Y1-Z2")
@@ -84,8 +86,7 @@ std::map<std::string, const Eigen::Vector3d> drop_points = {
     {"X2-Y2-Z2-FILLET", Eigen::Vector3d(0.3, -0.79, 0.3)},
 };
 
-bool execute_motion(ros::Rate &rate, UR5 &ur5, const Eigen::Vector3d &pos, const Eigen::Vector3d &rot, const Eigen::VectorXd &qEs, double max_t, Eigen::VectorXd qEf = Eigen::VectorXd::Zero(6)) {
-
+void execute_motion(ros::Rate &rate, UR5 &ur5, const Eigen::Vector3d &pos, const Eigen::Vector3d &rot, const Eigen::VectorXd &qEs, double max_t, Eigen::VectorXd qEf = Eigen::VectorXd::Zero(6)) {
   if (qEf == Eigen::VectorXd::Zero(6)) {
     Eigen::MatrixXd dest_angles = Kinematics::ik(Kinematics::create_homogeneous_matrix(pos, Kinematics::eul2rotm(rot)));
     qEf = Kinematics::best_angles(qEs, dest_angles);
@@ -111,8 +112,6 @@ bool execute_motion(ros::Rate &rate, UR5 &ur5, const Eigen::Vector3d &pos, const
     ros::spinOnce();
     rate.sleep();
   }
-
-  return true;
 }
 
 Eigen::VectorXd refresh_theta() {
@@ -135,30 +134,31 @@ Eigen::VectorXd refresh_theta() {
   return theta;
 }
 
-bool working_position(ros::Rate &rate, UR5 &ur5, const Eigen::VectorXd &qEs, Eigen::Vector3d rot, double max_t, std::string block_name, double inclination) {
-
+void working_position(ros::Rate &rate, UR5 &ur5, const Eigen::VectorXd &qEs, Eigen::Vector3d rot, double max_t, std::string block_name, double inclination) {
   Eigen::Vector3d pos = drop_points[block_name];
 
   double x;
-  if(block_name == "X1-Y1-Z2" || block_name == "X1-Y2-Z1" || block_name == "X1-Y4-Z1") x=-0.1*sin(inclination);
-  else if(block_name == "X1-Y4-Z2" || block_name == "X2-Y2-Z2" || block_name == "X2-Y2-Z2-FILLET") x=0.1*sin(inclination);
-  else x=0;
+  if (block_name == "X1-Y1-Z2" || block_name == "X1-Y2-Z1" || block_name == "X1-Y4-Z1")
+    x = -0.1 * sin(inclination);
+  else if (block_name == "X1-Y4-Z2" || block_name == "X2-Y2-Z2" || block_name == "X2-Y2-Z2-FILLET")
+    x = 0.1 * sin(inclination);
+  else
+    x = 0;
 
-  //flip x if blocks are on right side
-  
-  if (inclination < 0) pos -= Eigen::Vector3d(x, 0.05*sin(inclination), 0);
-  else if (inclination > 0) pos += Eigen::Vector3d(-x, 0.05*sin(inclination), 0);
+  // flip x if blocks are on right side
 
+  if (inclination < 0)
+    pos -= Eigen::Vector3d(x, 0.05 * sin(inclination), 0);
+  else if (inclination > 0)
+    pos += Eigen::Vector3d(-x, 0.05 * sin(inclination), 0);
 
   ROS_INFO_STREAM("pos: " << pos.transpose());
   ROS_INFO_STREAM("rot: " << rot.transpose());
 
   execute_motion(rate, ur5, pos, rot, refresh_theta(), max_t);
-
-  return true;
 }
 
-bool object_position(ros::Rate &rate, UR5 &ur5, Gripper &gripper, Eigen::VectorXd qEs, Eigen::Vector3d &pos, std::string block_name, double rotation, double inclination) {
+void object_position(ros::Rate &rate, UR5 &ur5, Gripper &gripper, Eigen::VectorXd qEs, Eigen::Vector3d &pos, std::string block_name, double rotation, double inclination) {
   Eigen::Vector3d over_pos = pos + Eigen::Vector3d(0.0, 0.0, 0.1);
   if (rotation > 0) {
     rotation = (abs(rotation - M_PI) < abs(rotation)) ? rotation - M_PI : rotation;
@@ -170,37 +170,62 @@ bool object_position(ros::Rate &rate, UR5 &ur5, Gripper &gripper, Eigen::VectorX
   ROS_INFO_STREAM("rot: " << rot.transpose());
 
   execute_motion(rate, ur5, over_pos, rot, refresh_theta(), 2);
+
   execute_motion(rate, ur5, pos, rot, refresh_theta(), 0.5);
 
   gripper.push(0.3);
-  if (!gripper.attach(block_name, "link")) {
-    return false;
-  }
+  gripper.attach(block_name, "link");
 
   execute_motion(rate, ur5, over_pos, rot, refresh_theta(), 0.5);
 
   rot = rot + Eigen::Vector3d(0.0, inclination, -inclination);
 
-  working_position(rate, ur5, refresh_theta(), rot, 2, block_name, inclination); // new_table
+  working_position(rate, ur5, refresh_theta(), rot, 2, block_name, inclination);
 
   gripper.push(0.0, true);
-  if (!gripper.detach()) {
-    return false;
-  }
-
-  while (ros::ok() && gripper.remaining() > 0) {
-    ros::spinOnce();
-    rate.sleep();
-  }
-
-  return true;
+  gripper.detach();
 }
 
-bool original_position(ros::Rate &rate, UR5 &ur5, Eigen::VectorXd qEs, Eigen::VectorXd &original) {
-
+void reset(ros::NodeHandle &, UR5 &ur5, Gripper &, ros::Rate &rate, Eigen::VectorXd &original) {
   execute_motion(rate, ur5, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(), refresh_theta(), 1, original);
+}
 
-  return true;
+void classify(ros::NodeHandle &n, UR5 &ur5, Gripper &gripper, ros::Rate &rate, Eigen::VectorXd &original) {
+  ros::ServiceClient client = n.serviceClient<x_msgs::Blocks>("blocks");
+  x_msgs::Blocks blocks;
+
+  if (!client.call(blocks)) {
+    throw new std::runtime_error("Failed to call service");
+  }
+
+  gripper.disable_collisions();
+
+  while (blocks.response.list.size() > 0) {
+    std::vector<Brick> bricks;
+
+    for (x_msgs::Block block : blocks.response.list) {
+      bricks.push_back(Brick(block));
+    }
+
+    std::sort(bricks.begin(), bricks.end(), std::less<Brick>());
+
+    geometry_msgs::Point curr = bricks[0].block.obj;
+    std::string block_name = bricks[0].block.label;
+    double rotation = bricks[0].block.angle;
+    double inclination = bricks[0].block.inclination;
+    Eigen::Vector3d pos = (Eigen::Vector3d() << curr.x, curr.y, curr.z).finished();
+
+    object_position(rate, ur5, gripper, refresh_theta(), pos, block_name, rotation, inclination);
+
+    if (!client.call(blocks)) {
+      throw new std::runtime_error("Failed to call service");
+    }
+
+    ROS_INFO_STREAM("Found " << blocks.response.list.size() << " bricks");
+  }
+
+  reset(n, ur5, gripper, rate, original);
+  gripper.enable_collisions();
 }
 
 int main(int argc, char *argv[]) {
@@ -212,49 +237,38 @@ int main(int argc, char *argv[]) {
 
   ros::Rate rate(100);
 
-  ros::ServiceClient client = n.serviceClient<x_msgs::Blocks>("blocks");
-  x_msgs::Blocks srv;
-
-  if (client.call(srv)) {
-    ROS_INFO_STREAM("Found " << srv.response.list.size() << " blocks");
-  } else {
-    ROS_INFO_STREAM("Failed to call service");
-    return 1;
-  }
-
-  gripper.disable_collisions();
-
   Eigen::VectorXd original = refresh_theta();
 
-  while (srv.response.list.size() > 0) {
-    std::vector<Brick> blocchi;
+  linenoise::SetCompletionCallback([](const char *buf, std::vector<std::string> &completions) {
+    if (buf[0] == 'c') {
+      completions.push_back("classify");
+    } else if (buf[0] == 'r') {
+      completions.push_back("reset");
+    }
+  });
 
-    for (x_msgs::Block b : srv.response.list) {
-      blocchi.push_back(Brick(b));
+  while (true) {
+    std::string line;
+    auto quit = linenoise::Readline("ur5 > ", line);
+
+    if (quit) {
+      break;
     }
 
-    std::sort(blocchi.begin(), blocchi.end(), std::less<Brick>());
-
-    geometry_msgs::Point curr = blocchi[0].block.obj;
-    std::string block_name = blocchi[0].block.label;
-    double rotation = blocchi[0].block.angle;
-    double inclination = blocchi[0].block.inclination;
-    Eigen::Vector3d pos = (Eigen::Vector3d() << curr.x, curr.y, curr.z).finished();
-    object_position(rate, ur5, gripper, refresh_theta(), pos, block_name, rotation, inclination);
-
-    if (client.call(srv)) {
-      ROS_INFO_STREAM("Found " << srv.response.list.size() << " blocks");
-    } else {
-      ROS_INFO_STREAM("Failed to call service");
-      return 1;
+    try {
+      if (line == "classify") {
+        classify(n, ur5, gripper, rate, original);
+      } else if (line == "reset") {
+        reset(n, ur5, gripper, rate, original);
+      } else {
+        ROS_ERROR_STREAM("Command \"" << line << "\" not found!");
+      }
+    } catch (const std::exception &exception) {
+      ROS_ERROR_STREAM("Encountered an error: " << exception.what());
     }
+
+    linenoise::AddHistory(line.c_str());
   }
-
-  original_position(rate, ur5, refresh_theta(), original);
-
-  gripper.enable_collisions();
-
-  ROS_INFO_STREAM("Success!");
 
   return 0;
 }
