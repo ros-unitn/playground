@@ -138,8 +138,8 @@ Eigen::VectorXd refresh_theta() {
 bool working_position(ros::Rate &rate, UR5 &ur5, const Eigen::VectorXd &qEs, Eigen::Vector3d rot, double max_t, std::string block_name, double inclination) {
 
   Eigen::Vector3d pos = drop_points[block_name];
-  if (inclination < 0) rot += Eigen::Vector3d(0, 0.1*cos(inclination), 0);
-  else if (inclination > 0) rot -= Eigen::Vector3d(0, 0.1*cos(inclination), 0);
+  if (inclination < 0) pos += Eigen::Vector3d(-0.05*sin(inclination), -0.05*sin(inclination), 0);
+  else if (inclination > 0) pos -= Eigen::Vector3d(-0.05*sin(inclination), -0.05*sin(inclination), 0);
 
 
   ROS_INFO_STREAM("pos: " << pos.transpose());
@@ -171,7 +171,7 @@ bool object_position(ros::Rate &rate, UR5 &ur5, Gripper &gripper, Eigen::VectorX
 
   execute_motion(rate, ur5, over_pos, rot, refresh_theta(), 0.5);
 
-  rot = rot + Eigen::Vector3d(0.0, inclination, 0.0);
+  rot = rot + Eigen::Vector3d(0.0, inclination, -inclination);
 
   working_position(rate, ur5, refresh_theta(), rot, 2, block_name, inclination); // new_table
 

@@ -273,15 +273,15 @@ def detection(raw_color, raw_depth):
             for p1x,p1y,p2x,p2y in lines[0]:
                 cv2.line(color, (int(p1x+x1), int(p1y+y1)), (int(p2x+x1), int(p2y+y1)), (0, 255, 0), 2)
                 if p1x+x1<center_x and p2x+x1<center_x and center_y<max(p1y+y1,p2y+y1):
-                    inclination=np.radians(-30)
+                    inclination=np.radians(-15)
                 elif p1x+x1>center_x and p2x+x1>center_x and center_y>min(p1y+y1,p2y+y1):
-                    inclination=np.radians(30)
+                    inclination=np.radians(15)
                 elif p1y+y1<center_y and p2y+y1<center_y and center_x<max(p1x+x1,p2x+x1):
-                    inclination=np.radians(-30)
+                    inclination=np.radians(-15)
                 elif p1y+y1>center_y and p2y+y1>center_y and center_x>min(p1x+x1,p2x+x1):
-                    inclination=np.radians(30)
+                    inclination=np.radians(15)
                 else:
-                    inclination=np.radians(45)
+                    inclination=np.radians(30)
 
         ## Conclusions
 
