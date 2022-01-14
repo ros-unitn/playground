@@ -43,9 +43,9 @@ const Eigen::VectorXd Kinematics::best_angles(const Eigen::VectorXd &actual, con
 
   std::sort(diffs.begin(), diffs.end());
 
-  std::cout << "Actual: " << actual.transpose() << std::endl;
-  std::cout << "Possible:\n" << possible << std::endl;
-  std::cout << "Choosed: " << possible.row(diffs[0].second) << std::endl;
+  //std::cout << "Actual: " << actual.transpose() << std::endl;
+  //std::cout << "Possible:\n" << possible << std::endl;
+  //std::cout << "Choosed: " << possible.row(diffs[0].second) << std::endl;
 
   return possible.row(diffs[0].second).transpose();
 }

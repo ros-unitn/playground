@@ -138,8 +138,16 @@ Eigen::VectorXd refresh_theta() {
 bool working_position(ros::Rate &rate, UR5 &ur5, const Eigen::VectorXd &qEs, Eigen::Vector3d rot, double max_t, std::string block_name, double inclination) {
 
   Eigen::Vector3d pos = drop_points[block_name];
-  if (inclination < 0) pos += Eigen::Vector3d(-0.05*sin(inclination), -0.05*sin(inclination), 0);
-  else if (inclination > 0) pos -= Eigen::Vector3d(-0.05*sin(inclination), -0.05*sin(inclination), 0);
+
+  double x;
+  if(block_name == "X1-Y1-Z2" || block_name == "X1-Y2-Z1" || block_name == "X1-Y4-Z1") x=-0.1*sin(inclination);
+  else if(block_name == "X1-Y4-Z2" || block_name == "X2-Y2-Z2" || block_name == "X2-Y2-Z2-FILLET") x=0.1*sin(inclination);
+  else x=0;
+
+  //flip x if blocks are on right side
+  
+  if (inclination < 0) pos -= Eigen::Vector3d(x, 0.05*sin(inclination), 0);
+  else if (inclination > 0) pos += Eigen::Vector3d(-x, 0.05*sin(inclination), 0);
 
 
   ROS_INFO_STREAM("pos: " << pos.transpose());
