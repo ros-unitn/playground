@@ -195,7 +195,7 @@ void classify(ros::NodeHandle &n, UR5 &ur5, Gripper &gripper, ros::Rate &rate, E
   x_msgs::Blocks blocks;
 
   if (!client.call(blocks)) {
-    throw new std::runtime_error("Failed to call service");
+    throw std::runtime_error("Failed to call service");
   }
 
   gripper.disable_collisions();
@@ -218,7 +218,7 @@ void classify(ros::NodeHandle &n, UR5 &ur5, Gripper &gripper, ros::Rate &rate, E
     object_position(rate, ur5, gripper, refresh_theta(), pos, block_name, rotation, inclination);
 
     if (!client.call(blocks)) {
-      throw new std::runtime_error("Failed to call service");
+      throw std::runtime_error("Failed to call service");
     }
 
     ROS_INFO_STREAM("Found " << blocks.response.list.size() << " bricks");

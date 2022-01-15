@@ -215,7 +215,6 @@ def detection(raw_color, raw_depth):
 
         # Circle detection
 
-
         circles_thresh = masked_depth.min() + 3
         _, circles_threshold = cv2.threshold(
             masked_depth, circles_thresh, 255, cv2.THRESH_BINARY
@@ -254,7 +253,7 @@ def detection(raw_color, raw_depth):
             edged_img, 1, np.pi / 180, 25, minLineLength=5, maxLineGap=50
         )
         inclination = 0
-        if lines is not None:
+        if circles is None and lines is not None:
             for p1x, p1y, p2x, p2y in lines[0]:
                 if (
                     p1x + x1 < center_x
@@ -292,20 +291,18 @@ def detection(raw_color, raw_depth):
         block.angle = np.radians(min_area_rect_angle)
         block.label = label
         block.inclination = inclination
-        if circles is not None:
-            block.inclination = 0
 
         message_frame.list.append(block)
-
-        random_color = list(np.random.random(size=3) * 256)
-        black = (0, 0, 0)
-        cv2.rectangle(color, (x1, y1), (x2, y2), random_color, 4)
-        cv2.putText(color, block.label, (x1, y1-5), cv2.FONT_HERSHEY_SIMPLEX, 0.8, black, 2)
 
         ## Debug
 
         # bbox_color = cv2.blur(color[y1:y2, x1:x2], (1, 1))
         # surface = bbox_color.copy()
+
+        # if lines is not None:
+        #     for line in lines:
+        #         for px1, py1, px2, py2 in line:
+        #             cv2.line(surface, (px1, py1), (px2, py2), (0, 255, 255), 2)
 
         # cv2.drawContours(
         #     surface, [np.int0(cv2.boxPoints(min_area_rect))], 0, (0, 0, 255), -1
@@ -317,12 +314,16 @@ def detection(raw_color, raw_depth):
         #         x, y, r = pt[0], pt[1], pt[2]
         #         cv2.circle(color, (x1+x, y1+y), r, (255, 0, 0), -1)
 
-
         # for contour in contours:
         #     approx = cv2.approxPolyDP(
         #         contour, 0.01 * cv2.arcLength(contour, True), True
         #     )
         #     cv2.drawContours(surface, [approx], -1, (0, 255, 0), 3)
+
+        # random_color = list(np.random.random(size=3) * 256)
+        # black = (0, 0, 0)
+        # cv2.rectangle(color, (x1, y1), (x2, y2), random_color, 4)
+        # cv2.putText(color, block.label, (x1, y1-5), cv2.FONT_HERSHEY_SIMPLEX, 0.8, black, 2)
 
         # cv2.imshow(str(i), surface)
         # cv2.waitKey(0)

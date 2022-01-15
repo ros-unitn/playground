@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
   <world name="base">
     <gui>
       <camera name="user_camera">
-        <pose>1.4 -2.3 1.4 0.0 0.25 1.9</pose>
+        <pose>2 2 1.4 0.0 0.25 -2.36</pose>
       </camera>
     </gui>
 
