@@ -15,9 +15,15 @@ install(DIRECTORY
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
+catkin_python_setup()
+
 catkin_install_python(PROGRAMS
   scripts/cleanup.py
   scripts/setup_1.py
   scripts/setup_2.py
+  scripts/setup_3.py
+  scripts/setup_4.py
+  scripts/setup_bad_gazebo_collisions.py
+  scripts/setup_confusing.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
