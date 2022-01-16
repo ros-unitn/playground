@@ -49,6 +49,7 @@ models: $(home)/.gazebo/models/kinect.model \
 	$(home)/.gazebo/models/ur5_base.model \
 	$(home)/.gazebo/models/table.model \
 	$(home)/.gazebo/models/table_drop.model \
+	$(home)/.gazebo/models/table_build.model \
 	$(home)/.gazebo/models/blocks.model
 
 run: 

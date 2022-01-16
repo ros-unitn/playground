@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <sdf version="1.5">
-  <model name="table_drop">
+  <model name="table_build">
     <static>true</static>
     <link name="link">
       <collision name="surface">
@@ -28,8 +28,8 @@
         </geometry>
         <material>
           <script>
-            <uri>model://table_drop.model/materials/scripts/drop.material</uri>
-            <name>drop</name>
+            <uri>model://table_build.model/materials/scripts/build.material</uri>
+            <name>build</name>
           </script>
         </material>
       </visual>

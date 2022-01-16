@@ -1,4 +1,4 @@
-material building
+material build
 {
   technique
   {
@@ -6,7 +6,7 @@ material building
     {
       texture_unit
       {
-        texture ../textures/Building.jpg
+        texture ../textures/Build.jpg
         scale 1 1
       }
     }

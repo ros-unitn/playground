@@ -73,11 +73,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
       </include>
     </model>
 
-    <!-- Table Drop -->
-    <model name="table_drop">
+    <!-- Table Build -->
+    <model name="table_build">
       <static>true</static>
       <include>
-        <uri>model://table.model</uri>
+        <uri>model://table_build.model</uri>
         <pose>0 0.75 0 0 0 1.57</pose>
       </include>
     </model>
