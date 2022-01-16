@@ -280,7 +280,7 @@ def detection(raw_color, raw_depth):
                 ):
                     inclination = np.radians(15)
                 else:
-                    inclination = np.radians(30)
+                    inclination = np.radians(20)
 
         ## Conclusions
 

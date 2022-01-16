@@ -27,7 +27,7 @@ file_path = Path(__file__)
 playground_path = file_path.parents[3]
 models_path = playground_path.joinpath("models", "blocks.model")
 
-x_space = [0.50, 0.65, 0.80]
+x_space = [0.45, 0.60, 0.75]
 y_space = [0.15, -0.15]
 z = 0.8
 

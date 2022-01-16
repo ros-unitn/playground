@@ -10,8 +10,6 @@ class Kinematics {
 public:
   // convert euler angles to rotation matrix
   static const Eigen::Matrix3d eul2rotm(const Eigen::Vector3d &eul);
-  // convert rotation matrix to euler angles
-  static const Eigen::Vector3d rotm2eul(const Eigen::Matrix3d &rotm);
   // create homogeneous matrix from position and orientation
   static const Eigen::Matrix4d create_homogeneous_matrix(const Eigen::Vector3d &position, const Eigen::Matrix3d &orientation);
   // get end-effector position using homogeneous matrix
@@ -22,15 +20,11 @@ public:
   static const Eigen::MatrixXd p2p(const Eigen::VectorXd &qEs, const Eigen::VectorXd &qEf, double maxT);
   // get joint angles from end-effector position and orientation
   static const Eigen::MatrixXd ik(const Eigen::Matrix4d &T60);
-  // get homogeneous matrix from forward kinematics
-  static const Eigen::Matrix4d fk(const Eigen::VectorXd &theta);
-
   // get best angles for p2p trajectory
   static const Eigen::VectorXd best_angles(const Eigen::VectorXd &actual, const Eigen::MatrixXd &possible);
 
 private:
   static constexpr double minT = 0.0;
-  // static constexpr double maxT = 3.0;
   static constexpr double step = 0.01;
 
   // link lengths

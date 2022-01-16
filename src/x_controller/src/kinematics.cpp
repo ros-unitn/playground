@@ -2,7 +2,6 @@
 #include <iostream>
 
 constexpr double Kinematics::minT;
-// constexpr double Kinematics::maxT;
 constexpr double Kinematics::step;
 
 const Eigen::VectorXd Kinematics::a = (Eigen::VectorXd(6) << 0, -0.425, -0.39225, 0, 0, 0).finished();
@@ -32,7 +31,7 @@ const Eigen::VectorXd Kinematics::best_angles(const Eigen::VectorXd &actual, con
 
   for (int i = 0; i < possible.rows(); i++) {
     double diff = 0;
-    if (check_row(possible.row(i).transpose()) && abs(possible.row(i).transpose()(0)) < 2.8 && possible.row(i)(4) < 0) {
+    if (check_row(possible.row(i).transpose()) && abs(possible.row(i).transpose()(0)) < 2.5 && possible.row(i)(4) < 0) {
       for (int j = 1; j < 4; j++) {
         diff += abs(possible.row(i).transpose()(j) - actual(j));
       }
@@ -40,8 +39,11 @@ const Eigen::VectorXd Kinematics::best_angles(const Eigen::VectorXd &actual, con
     }
   }
 
-  std::sort(diffs.begin(), diffs.end());
+  if(diffs.size() == 0) {
+    throw std::runtime_error("No valid angles found");
+  }
 
+  std::sort(diffs.begin(), diffs.end());
   return possible.row(diffs[0].second).transpose();
 }
 
@@ -50,10 +52,6 @@ const Eigen::Matrix3d Kinematics::eul2rotm(const Eigen::Vector3d &eul) {
           sin(eul(0)) * cos(eul(1)), sin(eul(0)) * sin(eul(1)) * sin(eul(2)) + cos(eul(0)) * cos(eul(2)), sin(eul(0)) * sin(eul(1)) * cos(eul(2)) - cos(eul(0)) * sin(eul(2)),
           -sin(eul(1)), cos(eul(1)) * sin(eul(2)), cos(eul(1)) * cos(eul(2)))
       .finished();
-}
-
-const Eigen::Vector3d Kinematics::rotm2eul(const Eigen::Matrix3d &rotm) {
-  return rotm.eulerAngles(2, 1, 0);
 }
 
 const Eigen::Matrix4d Kinematics::create_homogeneous_matrix(const Eigen::Vector3d &position, const Eigen::Matrix3d &orientation) {
@@ -118,20 +116,6 @@ const double Kinematics::closest_theta(double th) {
   }
 }
 
-const Eigen::Matrix4d Kinematics::fk(const Eigen::VectorXd &theta) {
-
-  Eigen::Matrix4d T10 = compute_matrix(theta(0), 0);
-  Eigen::Matrix4d T21 = compute_matrix(theta(1), 1);
-  Eigen::Matrix4d T32 = compute_matrix(theta(2), 2);
-  Eigen::Matrix4d T43 = compute_matrix(theta(3), 3);
-  Eigen::Matrix4d T54 = compute_matrix(theta(4), 4);
-  Eigen::Matrix4d T65 = compute_matrix(theta(5), 5);
-
-  Eigen::Matrix4d T06 = T10 * T21 * T32 * T43 * T54 * T65;
-
-  return T06;
-}
-
 const Eigen::MatrixXd Kinematics::ik(const Eigen::Matrix4d &T60) {
 
   Eigen::Vector3d p60 = Kinematics::get_position(T60);
@@ -149,17 +133,9 @@ const Eigen::MatrixXd Kinematics::ik(const Eigen::Matrix4d &T60) {
   double th5_3 = +std::real(acos((p60(0) * sin(th1_2) - p60(1) * cos(th1_2) - d(3)) / d(5)));
   double th5_4 = -std::real(acos((p60(0) * sin(th1_2) - p60(1) * cos(th1_2) - d(3)) / d(5)));
 
-  // double p61y = p60(0) * -sin(th1_1) + p60(1) * cos(th1_1);
-  // assert(abs(p61y-d(3))<=abs(d(5)));
-  // p61y = p60(0) * -sin(th1_2) + p60(1) * cos(th1_2);
-  // assert(abs(p61y-d(3))<=abs(d(5)));
-
   Eigen::Matrix4d T06 = T60.inverse();
   Eigen::Vector3d xhat = (Eigen::Vector3d() << T06(0, 0), T06(1, 0), T06(2, 0)).finished();
   Eigen::Vector3d yhat = (Eigen::Vector3d() << T06(0, 1), T06(1, 1), T06(2, 1)).finished();
-
-  // assert(sin(th5_1) != 0);
-  // assert(sin(th5_3) != 0);
 
   // find theta6
   double th6_1 = std::real(atan2(((-xhat(1) * sin(th1_1) + yhat(1) * cos(th1_1))) / sin(th5_1), ((xhat(0) * sin(th1_1) - yhat(0) * cos(th1_1))) / sin(th5_1)));
