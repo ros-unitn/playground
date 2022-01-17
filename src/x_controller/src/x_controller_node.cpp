@@ -151,9 +151,9 @@ void working_position(ros::Rate &rate, UR5 &ur5, const Eigen::VectorXd &qEs, Eig
   // flip x if blocks are on right side
 
   if (inclination < 0)
-    pos -= Eigen::Vector3d(x, 0.025 * sin(inclination), 0);
+    pos -= Eigen::Vector3d(x, -0.05 * sin(inclination), 0);
   else if (inclination > 0)
-    pos += Eigen::Vector3d(-x, 0.025 * sin(inclination), 0);
+    pos += Eigen::Vector3d(-x, -0.05 * sin(inclination), 0);
 
   ROS_INFO_STREAM("Position: " << pos.transpose());
   ROS_INFO_STREAM("Rotation: " << rot.transpose());
@@ -217,18 +217,18 @@ void castle(ros::Rate &rate, UR5 &ur5, const Eigen::VectorXd &qEs, Eigen::Vector
 
   double x;
   if (block_name == "X1-Y1-Z2" || block_name == "X1-Y2-Z1" || block_name == "X1-Y4-Z1")
-    x = -0.2 * sin(inclination);
+    x = 0.05 * sin(inclination);
   else if (block_name == "X1-Y4-Z2" || block_name == "X2-Y2-Z2" || block_name == "X2-Y2-Z2-FILLET")
-    x = 0.2 * sin(inclination);
+    x = -0.05 * sin(inclination);
   else
     x = 0;
 
   // flip x if blocks are on right side
 
   if (inclination < 0)
-    pos -= Eigen::Vector3d(x, 0.1 * sin(inclination), 0);
+    pos -= Eigen::Vector3d(x, 0.05 * sin(inclination), 0);
   else if (inclination > 0)
-    pos += Eigen::Vector3d(-x, 0.1 * sin(inclination), 0);
+    pos += Eigen::Vector3d(-x, 0.05 * sin(inclination), 0);
 
   ROS_INFO_STREAM("Position: " << pos.transpose());
   ROS_INFO_STREAM("Rotation: " << rot.transpose());
@@ -272,9 +272,9 @@ void object_position(ros::Rate &rate, UR5 &ur5, Gripper &gripper, Eigen::VectorX
   rot = rot + Eigen::Vector3d(0.0, inclination, -inclination);
 
   if (!is_castle)
-    working_position(rate, ur5, refresh_theta(), rot, 2, block_name, inclination);
+    working_position(rate, ur5, refresh_theta(), rot, 3, block_name, inclination);
   else
-    castle(rate, ur5, refresh_theta(), rot, 2, block_name, inclination);
+    castle(rate, ur5, refresh_theta(), rot, 3, block_name, inclination);
 
   gripper.push(0.0, true);
   gripper.detach();

@@ -3,11 +3,12 @@
 from itertools import product
 from pathlib import Path
 
-from geometry_msgs.msg import Point
+from geometry_msgs.msg import Point, Quaternion
 
 from world import Spawner
 
 block_2x2 = "X2-Y2-Z2"
+table = "table_build"
 
 file_path = Path(__file__)
 playground_path = file_path.parents[3]
@@ -27,6 +28,7 @@ block_2_height = 0.05 + buffer_height
 
 if __name__ == "__main__":
     spawner = Spawner()
+    spawner.spawn_model(table, Point(0, 0.75, 0), Quaternion(0, 0, 0.7068252, 0.7073883))
 
     for (x, y) in product(x_space_layer_1, y_space_layer_1):
         spawner.spawn_model(block_2x2, pos=Point(x, y, table_height))

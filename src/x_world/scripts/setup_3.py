@@ -21,6 +21,8 @@ names = [
     "X2-Y2-Z2-FILLET",
 ]
 
+table = "table_drop"
+
 x_space = [0.45, 0.60, 0.75]
 y_space = [0.15, -0.15]
 z = 0.8
@@ -35,6 +37,8 @@ if __name__ == "__main__":
 
     random_positions = list(product(x_space, y_space))
     random.shuffle(random_positions)
+
+    spawner.spawn_model(table, Point(0, 0.75, 0), Quaternion(0, 0, 0.7068252, 0.7073883))
 
     for name, (x, y) in zip(random_names, random_positions):
         qx, qy, qz, qw = [random.random() * 2 * math.pi for _ in range(4)]

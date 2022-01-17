@@ -73,15 +73,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. -->
       </include>
     </model>
 
-    <!-- Table Drop -->
-    <model name="table_drop">
-      <static>true</static>
-      <include>
-        <uri>model://table_drop.model</uri>
-        <pose>0 0.75 0 0 0 1.57</pose>
-      </include>
-    </model>
-
     <plugin name="x_linker" filename="libx_linker.so" />
   </world>
 </sdf>

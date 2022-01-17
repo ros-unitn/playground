@@ -3,6 +3,7 @@
 import random
 
 from world import Spawner
+from geometry_msgs.msg import Point, Quaternion
 
 names = [
     "X1-Y1-Z2",
@@ -18,8 +19,10 @@ names = [
     "X2-Y2-Z2-FILLET",
 ]
 
+table = "table_drop"
 
 if __name__ == "__main__":
     spawner = Spawner()
     name = random.choice(names)
+    spawner.spawn_model(table,Point(0,0.75,0),Quaternion(0,0,0.7068252,0.7073883))
     spawner.spawn_model(name)

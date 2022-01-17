@@ -10,7 +10,7 @@ from geometry_msgs.msg import Pose, Point, Quaternion
 
 file_path = Path(__file__)
 playground_path = file_path.parents[5]
-models_path = playground_path.joinpath("models", "blocks.model")
+models_path = playground_path.joinpath("models")
 
 materials = [
     "Gazebo/Grey",
@@ -29,6 +29,10 @@ materials = [
     "Gazebo/Indigo",
 ]
 
+tables = [
+    "table_drop",
+    "table_build"
+]
 
 material_xml = "<material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>{}</name></script></material>"
 
@@ -40,9 +44,13 @@ class Spawner:
 
     def spawn_model(self, name, pos=Point(0.6, 0, 0.72), quat=Quaternion(0, 0, 0, 0)):
         req = SpawnModelRequest()
-        req.model_name = "%s_%s" % (name, random.randint(1, 1000))
+        req.model_name = "%s_%s" % (name, random.randint(1, 1000)) if name not in tables else name
+        if name not in tables:
+            actual_path = models_path.joinpath("blocks.model", name) 
+        else:
+            actual_path = models_path.joinpath(name+".model") 
 
-        with open(models_path.joinpath(name, "model.sdf")) as f:
+        with open(actual_path.joinpath("model.sdf")) as f:
             sdf = ET.fromstring(f.read())
             model = sdf.find("model")
             link = model.find("link")
