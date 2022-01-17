@@ -24,6 +24,5 @@ catkin_install_python(PROGRAMS
   scripts/setup_3.py
   scripts/setup_4.py
   scripts/setup_bad_gazebo_collisions.py
-  scripts/setup_confusing.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

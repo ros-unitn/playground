@@ -40,7 +40,7 @@ const Eigen::VectorXd Kinematics::best_angles(const Eigen::VectorXd &actual, con
   }
 
   if(diffs.size() == 0) {
-    throw std::runtime_error("No valid angles found");
+    return Eigen::VectorXd::Zero(6);
   }
 
   std::sort(diffs.begin(), diffs.end());
