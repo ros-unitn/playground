@@ -110,6 +110,8 @@ bool execute_motion(ros::Rate &rate, UR5 &ur5, const Eigen::Vector3d &pos, const
     ur5.push(params);
   }
 
+  ROS_INFO_STREAM("Executing motion to " << pos.transpose() << " with " << rot.transpose() << " rotation in " << max_t << " seconds");
+
   while (ros::ok() && ur5.remaining() > 0) {
     ur5.tick();
     ur5.publish();
@@ -146,16 +148,16 @@ Eigen::Vector3d pos_correction(const Eigen::Vector3d &pos, double inclination, s
 
   double x = -0.05 * sin(inclination);
   if (block_name == "X1-Y1-Z2" || block_name == "X1-Y2-Z1" || block_name == "X1-Y4-Z1")
-    x = 0.1 * sin(inclination);
+    x = 0.05 * sin(inclination);
   else if (block_name == "X1-Y4-Z2" || block_name == "X2-Y2-Z2" || block_name == "X2-Y2-Z2-FILLET")
-    x = -0.1 * sin(inclination);
+    x = -0.05 * sin(inclination);
 
   // flip x if blocks are on right side
 
   if (inclination < 0)
-    new_pos -= Eigen::Vector3d(x, -0.01 * sin(inclination), 0);
+    new_pos -= Eigen::Vector3d(x, -0.1 * sin(inclination), 0);
   else if (inclination > 0)
-    new_pos -= Eigen::Vector3d(-x, 0.01 * sin(inclination), 0);
+    new_pos -= Eigen::Vector3d(-x, 0.1 * sin(inclination), 0);
 
   return new_pos;
 }
@@ -165,9 +167,6 @@ void working_position(ros::Rate &rate, UR5 &ur5, const Eigen::VectorXd &qEs, Eig
 
   Eigen::Vector3d new_pos = pos_correction(pos, inclination, block_name);
   Eigen::Vector3d old_rot = rot - Eigen::Vector3d(0.0, inclination, -inclination);
-
-  ROS_INFO_STREAM("Position: " << pos.transpose());
-  ROS_INFO_STREAM("Rotation: " << rot.transpose());
 
   if (!execute_motion(rate, ur5, new_pos, rot, refresh_theta(), max_t)) {
     if (!execute_motion(rate, ur5, pos, old_rot, refresh_theta(), max_t)) throw std::runtime_error("Could not move to working position");
@@ -230,9 +229,6 @@ void castle(ros::Rate &rate, UR5 &ur5, const Eigen::VectorXd &qEs, const Eigen::
 
   pos_correction(pos, inclination, block_name);
 
-  ROS_INFO_STREAM("Position: " << pos.transpose());
-  ROS_INFO_STREAM("Rotation: " << rot.transpose());
-
   execute_motion(rate, ur5, pos, rot, refresh_theta(), max_t);
 }
 
@@ -246,10 +242,7 @@ void object_position(ros::Rate &rate, UR5 &ur5, Gripper &gripper, Eigen::VectorX
   }
   Eigen::Vector3d rot = (Eigen::Vector3d() << -rotation, -M_PI, 0).finished();
 
-  ROS_INFO_STREAM("Position: " << pos.transpose());
-  ROS_INFO_STREAM("Rotation: " << rot.transpose());
-
-  execute_motion(rate, ur5, over_pos, rot, refresh_theta(), 3);
+  execute_motion(rate, ur5, over_pos, rot, refresh_theta(), 4);
 
   execute_motion(rate, ur5, pos, rot, refresh_theta(), 0.5);
 
@@ -274,7 +267,7 @@ void object_position(ros::Rate &rate, UR5 &ur5, Gripper &gripper, Eigen::VectorX
   if (!is_castle)
     working_position(rate, ur5, refresh_theta(), rot, 4, block_name, inclination);
   else
-    castle(rate, ur5, refresh_theta(), rot, 3, block_name, inclination);
+    castle(rate, ur5, refresh_theta(), rot, 4, block_name, inclination);
 
   gripper.push(0.0, true);
   gripper.detach();

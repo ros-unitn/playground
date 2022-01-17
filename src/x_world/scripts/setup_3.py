@@ -4,6 +4,7 @@ import math
 import random
 from itertools import product
 
+from time import time
 from world import Spawner
 from geometry_msgs.msg import Point, Quaternion
 
@@ -25,11 +26,13 @@ table = "table_drop"
 
 x_space = [0.45, 0.60, 0.75]
 y_space = [0.15, -0.15]
-z = 0.8
+z = 0.8 
 
+random_seed = 1642457401.3817515
 
 if __name__ == "__main__":
     spawner = Spawner()
+    random.seed(random_seed)
     random_names = names.copy() + names.copy()
     random.shuffle(random_names)
     random_names = random_names[:len(random_names)//2]
