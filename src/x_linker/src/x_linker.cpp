@@ -111,13 +111,11 @@ bool LinkerPlugin::attach(std::string model_name_1, std::string link_name_1,
     ignition::math::Vector3d lhs = fixed.link_1->BoundingBox().Center();
 
     double best = std::numeric_limits<double>::infinity();
-    unsigned int best_string_distance = std::numeric_limits<unsigned int>::max();
 
     for (physics::ModelPtr model : haystack) {
       ROS_INFO_STREAM("Evaluating " << model->GetName());
-      if (model->GetName().find(model_name_2) != std::string::npos) {
-        ROS_INFO_STREAM(model->GetName() << " is a superset of " << model_name_2);
-        best_string_distance = 0;
+      // if (model->GetName().find(model_name_2) != std::string::npos) {
+        // ROS_INFO_STREAM(model->GetName() << " is a superset of " << model_name_2);
         // name contains the string we are searching for
         ignition::math::Vector3d rhs = model->WorldPose().Pos();
         ROS_INFO_STREAM("Distance " << lhs.Distance(rhs));
@@ -126,7 +124,7 @@ bool LinkerPlugin::attach(std::string model_name_1, std::string link_name_1,
           needle = model;
           best = distance;
         }
-      }
+      // }
     }
 
     if (needle == nullptr) {
