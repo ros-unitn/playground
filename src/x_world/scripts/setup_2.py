@@ -2,7 +2,6 @@
 
 import random
 from itertools import product
-
 import rospy
 from gazebo_msgs.srv import SpawnModel
 from geometry_msgs.msg import Point, Quaternion
@@ -29,9 +28,11 @@ x_space = [0.45, 0.55, 0.65, 0.75]
 y_space = [0.2, 0.0, -0.2]
 z = 0.72
 
+random_seed = 1642458395.3415635
 
 if __name__ == "__main__":
     spawner = Spawner()
+    random.seed(random_seed)
     random_names = names.copy()
     random.shuffle(random_names)
 

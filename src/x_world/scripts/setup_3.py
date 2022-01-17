@@ -4,7 +4,6 @@ import math
 import random
 from itertools import product
 
-from time import time
 from world import Spawner
 from geometry_msgs.msg import Point, Quaternion
 
