@@ -70,9 +70,6 @@ struct Brick {
   }
 };
 
-bool is_castle = false;
-int count = 0;
-
 std::map<std::string, const Eigen::Vector3d> drop_points = {
     {"X1-Y1-Z2", Eigen::Vector3d(-0.3, -0.45, 0.3)},
     {"X1-Y2-Z2", Eigen::Vector3d(-0.12, -0.45, 0.3)},
@@ -173,7 +170,7 @@ void working_position(ros::Rate &rate, UR5 &ur5, const Eigen::VectorXd &qEs, Eig
   }
 }
 
-void castle(ros::Rate &rate, UR5 &ur5, const Eigen::VectorXd &qEs, const Eigen::Vector3d rot, double max_t, std::string block_name, double inclination) {
+void castle(ros::Rate &rate, UR5 &ur5, const Eigen::VectorXd &qEs, const Eigen::Vector3d rot, double max_t, std::string block_name, double inclination, int count) {
 
   Eigen::Vector3d pos;
 
@@ -225,14 +222,12 @@ void castle(ros::Rate &rate, UR5 &ur5, const Eigen::VectorXd &qEs, const Eigen::
     break;
   }
 
-  count++;
-
   pos_correction(pos, inclination, block_name);
 
   execute_motion(rate, ur5, pos, rot, refresh_theta(), max_t);
 }
 
-void object_position(ros::Rate &rate, UR5 &ur5, Gripper &gripper, Eigen::VectorXd qEs, Eigen::Vector3d &pos, std::string block_name, double rotation, double inclination) {
+void object_position(ros::Rate &rate, UR5 &ur5, Gripper &gripper, Eigen::VectorXd qEs, Eigen::Vector3d &pos, std::string block_name, double rotation, double inclination, bool is_castle, int count) {
 
   Eigen::Vector3d over_pos = pos + Eigen::Vector3d(0.0, 0.0, 0.1);
   if (rotation > 0) {
@@ -267,7 +262,7 @@ void object_position(ros::Rate &rate, UR5 &ur5, Gripper &gripper, Eigen::VectorX
   if (!is_castle)
     working_position(rate, ur5, refresh_theta(), rot, 4, block_name, inclination);
   else
-    castle(rate, ur5, refresh_theta(), rot, 4, block_name, inclination);
+    castle(rate, ur5, refresh_theta(), rot, 4, block_name, inclination, count);
 
   gripper.push(0.0, true);
   gripper.detach();
@@ -277,7 +272,7 @@ void reset(ros::NodeHandle &, UR5 &ur5, Gripper &, ros::Rate &rate, Eigen::Vecto
   execute_motion(rate, ur5, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(), refresh_theta(), 1, original);
 }
 
-void classify(ros::NodeHandle &n, UR5 &ur5, Gripper &gripper, ros::Rate &rate, Eigen::VectorXd &original) {
+void classify(ros::NodeHandle &n, UR5 &ur5, Gripper &gripper, ros::Rate &rate, Eigen::VectorXd &original, bool is_castle) {
   ros::ServiceClient client = n.serviceClient<x_msgs::Blocks>("blocks");
   x_msgs::Blocks blocks;
 
@@ -292,10 +287,7 @@ void classify(ros::NodeHandle &n, UR5 &ur5, Gripper &gripper, ros::Rate &rate, E
     return;
   }
 
-  if (blocks.response.list.size() == 15) {
-    is_castle = true;
-  }
-
+  int count = 0;
   while (blocks.response.list.size() > 0) {
 
     ROS_INFO_STREAM("Found " << blocks.response.list.size() << " bricks");
@@ -315,11 +307,12 @@ void classify(ros::NodeHandle &n, UR5 &ur5, Gripper &gripper, ros::Rate &rate, E
     double inclination = bricks[0].block.inclination;
     Eigen::Vector3d pos = (Eigen::Vector3d() << curr.x, curr.y, curr.z).finished();
 
-    object_position(rate, ur5, gripper, refresh_theta(), pos, block_name, rotation, inclination);
-
+    object_position(rate, ur5, gripper, refresh_theta(), pos, block_name, rotation, inclination, is_castle, count);
+    
     if (!client.call(blocks)) {
       throw std::runtime_error("Failed to call service");
     }
+    count++;
   }
 
   reset(n, ur5, gripper, rate, original);
@@ -339,7 +332,14 @@ int main(int argc, char *argv[]) {
 
   linenoise::SetCompletionCallback([](const char *buf, std::vector<std::string> &completions) {
     if (buf[0] == 'c') {
-      completions.push_back("classify");
+      if (buf[1] == 'a') {
+        completions.push_back("castle");
+      } else if (buf[1] == 'l') {
+        completions.push_back("classify");
+      } else {
+        completions.push_back("classify");
+        completions.push_back("castle");
+      }
     } else if (buf[0] == 'r') {
       completions.push_back("reset");
     }
@@ -355,7 +355,9 @@ int main(int argc, char *argv[]) {
 
     try {
       if (line == "classify") {
-        classify(n, ur5, gripper, rate, original);
+        classify(n, ur5, gripper, rate, original, false);
+      } else if (line == "castle") {
+        classify(n, ur5, gripper, rate, original, true);
       } else if (line == "reset") {
         reset(n, ur5, gripper, rate, original);
       } else {
